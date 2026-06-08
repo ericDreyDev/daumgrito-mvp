@@ -1,15 +1,16 @@
-import Database from "better-sqlite3";
 import bcrypt from "bcryptjs";
+import { Pool } from "pg";
 import { env } from "../config/env.js";
 import { demoProviders, serviceCategories } from "./seed.js";
 
-export const db = new Database(env.databasePath);
-db.pragma("foreign_keys = ON");
+export const db = new Pool({
+  connectionString: env.databaseUrl
+});
 
-export function initializeDatabase() {
-  db.exec(`
+export async function initializeDatabase() {
+  await db.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id TEXT PRIMARY KEY,
+      id UUID PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       phone TEXT NOT NULL,
@@ -17,7 +18,7 @@ export function initializeDatabase() {
       city TEXT NOT NULL,
       neighborhood TEXT NOT NULL,
       user_type TEXT NOT NULL CHECK (user_type IN ('client', 'provider')),
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS service_categories (
@@ -26,102 +27,102 @@ export function initializeDatabase() {
     );
 
     CREATE TABLE IF NOT EXISTS provider_profiles (
-      id TEXT PRIMARY KEY,
-      user_id TEXT NOT NULL UNIQUE,
+      id UUID PRIMARY KEY,
+      user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
       photo_url TEXT,
-      services TEXT NOT NULL DEFAULT '[]',
+      services JSONB NOT NULL DEFAULT '[]'::jsonb,
       professional_description TEXT,
       availability TEXT,
       average_price TEXT,
-      average_rating REAL NOT NULL DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS service_requests (
-      id TEXT PRIMARY KEY,
-      client_id TEXT NOT NULL,
-      provider_id TEXT NOT NULL,
+      id UUID PRIMARY KEY,
+      client_id UUID NOT NULL REFERENCES users(id),
+      provider_id UUID NOT NULL REFERENCES provider_profiles(id),
       service TEXT NOT NULL,
       description TEXT NOT NULL,
-      desired_date TEXT NOT NULL,
+      desired_date DATE NOT NULL,
       location_neighborhood TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'Solicitado',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (client_id) REFERENCES users(id),
-      FOREIGN KEY (provider_id) REFERENCES provider_profiles(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS chat_messages (
-      id TEXT PRIMARY KEY,
-      service_request_id TEXT NOT NULL,
-      sender_id TEXT NOT NULL,
+      id UUID PRIMARY KEY,
+      service_request_id UUID NOT NULL REFERENCES service_requests(id) ON DELETE CASCADE,
+      sender_id UUID NOT NULL REFERENCES users(id),
       message TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE CASCADE,
-      FOREIGN KEY (sender_id) REFERENCES users(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS reviews (
-      id TEXT PRIMARY KEY,
-      provider_id TEXT NOT NULL,
-      client_id TEXT NOT NULL,
-      service_request_id TEXT NOT NULL,
+      id UUID PRIMARY KEY,
+      provider_id UUID NOT NULL REFERENCES provider_profiles(id),
+      client_id UUID NOT NULL REFERENCES users(id),
+      service_request_id UUID NOT NULL REFERENCES service_requests(id),
       rating INTEGER NOT NULL CHECK (rating BETWEEN 1 AND 5),
       comment TEXT,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (provider_id) REFERENCES provider_profiles(id),
-      FOREIGN KEY (client_id) REFERENCES users(id),
-      FOREIGN KEY (service_request_id) REFERENCES service_requests(id)
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
     CREATE TABLE IF NOT EXISTS payments (
-      id TEXT PRIMARY KEY,
-      service_request_id TEXT NOT NULL UNIQUE,
-      amount REAL NOT NULL,
+      id UUID PRIMARY KEY,
+      service_request_id UUID NOT NULL UNIQUE REFERENCES service_requests(id) ON DELETE CASCADE,
+      amount NUMERIC(10, 2) NOT NULL,
       payment_method TEXT NOT NULL CHECK (payment_method IN ('Pix', 'cartão', 'dinheiro')),
       status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado')),
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (service_request_id) REFERENCES service_requests(id) ON DELETE CASCADE
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
   `);
 
-  const insert = db.prepare("INSERT OR IGNORE INTO service_categories (id, name) VALUES (?, ?)");
-  serviceCategories.forEach((category) => insert.run(category.id, category.name));
-
-  seedDemoProviders();
+  await seedServiceCategories();
+  await seedDemoProviders();
 }
 
-function seedDemoProviders() {
-  const passwordHash = bcrypt.hashSync("demo123", 10);
-  const insertUser = db.prepare(
-    `INSERT OR IGNORE INTO users
-     (id, name, email, phone, password_hash, city, neighborhood, user_type)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'provider')`
-  );
-  const insertProfile = db.prepare(
-    `INSERT OR IGNORE INTO provider_profiles
-     (id, user_id, services, professional_description, availability, average_price, average_rating)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`
-  );
+async function seedServiceCategories() {
+  for (const category of serviceCategories) {
+    await db.query("INSERT INTO service_categories (id, name) VALUES ($1, $2) ON CONFLICT (id) DO NOTHING", [
+      category.id,
+      category.name
+    ]);
+  }
+}
 
-  demoProviders.forEach((provider) => {
-    insertUser.run(
-      provider.userId,
-      provider.name,
-      provider.email,
-      provider.phone,
-      passwordHash,
-      provider.city,
-      provider.neighborhood
+async function seedDemoProviders() {
+  const passwordHash = await bcrypt.hash("demo123", 10);
+
+  for (const provider of demoProviders) {
+    await db.query(
+      `INSERT INTO users (id, name, email, phone, password_hash, city, neighborhood, user_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, 'provider')
+       ON CONFLICT (id) DO NOTHING`,
+      [
+        provider.userId,
+        provider.name,
+        provider.email,
+        provider.phone,
+        passwordHash,
+        provider.city,
+        provider.neighborhood
+      ]
     );
-    insertProfile.run(
-      provider.profileId,
-      provider.userId,
-      JSON.stringify(provider.services),
-      provider.professionalDescription,
-      provider.availability,
-      provider.averagePrice,
-      provider.averageRating
+
+    await db.query(
+      `INSERT INTO provider_profiles
+       (id, user_id, services, professional_description, availability, average_price, average_rating)
+       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
+       ON CONFLICT (id) DO NOTHING`,
+      [
+        provider.profileId,
+        provider.userId,
+        JSON.stringify(provider.services),
+        provider.professionalDescription,
+        provider.availability,
+        provider.averagePrice,
+        provider.averageRating
+      ]
     );
-  });
+  }
 }

@@ -21,28 +21,28 @@ const statusSchema = z.object({
   status: z.enum(["Solicitado", "Em negociação", "Agendado", "Em andamento", "Concluído", "Cancelado"])
 });
 
-export function postServiceRequest(req: Request, res: Response) {
+export async function postServiceRequest(req: Request, res: Response) {
   if (req.user!.userType !== "client") {
     throw new AppError(403, "Apenas clientes podem criar solicitações.");
   }
 
   const input = createSchema.parse(req.body);
-  return res.status(201).json(createServiceRequest(req.user!.id, input));
+  return res.status(201).json(await createServiceRequest(req.user!.id, input));
 }
 
-export function getServiceRequests(req: Request, res: Response) {
-  return res.json(listServiceRequests(req.user!.id, req.user!.userType));
+export async function getServiceRequests(req: Request, res: Response) {
+  return res.json(await listServiceRequests(req.user!.id, req.user!.userType));
 }
 
-export function getServiceRequest(req: Request, res: Response) {
-  const serviceRequest = findServiceRequestById(routeParam(req.params.id, "id"));
+export async function getServiceRequest(req: Request, res: Response) {
+  const serviceRequest = await findServiceRequestById(routeParam(req.params.id, "id"));
   if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
   return res.json(serviceRequest);
 }
 
-export function putServiceRequestStatus(req: Request, res: Response) {
+export async function putServiceRequestStatus(req: Request, res: Response) {
   const { status } = statusSchema.parse(req.body);
-  const serviceRequest = updateServiceRequestStatus(routeParam(req.params.id, "id"), status);
+  const serviceRequest = await updateServiceRequestStatus(routeParam(req.params.id, "id"), status);
   if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
   return res.json(serviceRequest);
 }

@@ -2,7 +2,7 @@ import { createApp } from "./app.js";
 import { env } from "./config/env.js";
 import { initializeDatabase } from "./database/connection.js";
 
-initializeDatabase();
+await initializeDatabase();
 
 const app = createApp();
 

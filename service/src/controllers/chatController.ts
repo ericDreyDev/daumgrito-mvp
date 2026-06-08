@@ -7,11 +7,11 @@ const messageSchema = z.object({
   message: z.string().min(1).max(1000)
 });
 
-export function postChatMessage(req: Request, res: Response) {
+export async function postChatMessage(req: Request, res: Response) {
   const { message } = messageSchema.parse(req.body);
-  return res.status(201).json(createChatMessage(routeParam(req.params.serviceRequestId, "serviceRequestId"), req.user!.id, message));
+  return res.status(201).json(await createChatMessage(routeParam(req.params.serviceRequestId, "serviceRequestId"), req.user!.id, message));
 }
 
-export function getChatMessages(req: Request, res: Response) {
-  return res.json(listChatMessages(routeParam(req.params.serviceRequestId, "serviceRequestId")));
+export async function getChatMessages(req: Request, res: Response) {
+  return res.json(await listChatMessages(routeParam(req.params.serviceRequestId, "serviceRequestId")));
 }

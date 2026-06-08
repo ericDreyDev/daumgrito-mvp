@@ -1,0 +1,609 @@
+{
+  "info": {
+    "_postman_id": "9c6b6d52-2f7d-4df4-a45b-8a4f6e8cf9d3",
+    "name": "Dá um grito! API",
+    "description": "Collection para testar a API local do projeto Dá um grito!. Ajuste os valores das variáveis conforme seu ambiente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3333"
+    },
+    {
+      "key": "authToken",
+      "value": ""
+    },
+    {
+      "key": "providerId",
+      "value": "00000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "serviceRequestId",
+      "value": "00000000-0000-0000-0000-000000000002"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Verifica se a API está no ar."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva\",\n  \"email\": \"maria@example.com\",\n  \"phone\": \"11999999999\",\n  \"password\": \"123456\",\n  \"city\": \"São Paulo\",\n  \"neighborhood\": \"Centro\",\n  \"userType\": \"client\"\n}"
+            },
+            "description": "Cria um usuário cliente ou prestador.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test('Status code is 201', function () {",
+                    "  pm.expect(pm.response.code).to.equal(201);",
+                    "});",
+                    "var json = pm.response.json();",
+                    "if (json.token) {",
+                    "  pm.collectionVariables.set('authToken', json.token);",
+                    "}",
+                    "if (json.user && json.user.id) {",
+                    "  pm.collectionVariables.set('userId', json.user.id);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "name": "POST Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "login"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"maria@example.com\",\n  \"password\": \"123456\"\n}"
+            },
+            "description": "Autentica um usuário e salva o token na variável authToken.",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "pm.test('Status code is 200', function () {",
+                    "  pm.expect(pm.response.code).to.equal(200);",
+                    "});",
+                    "var json = pm.response.json();",
+                    "if (json.token) {",
+                    "  pm.collectionVariables.set('authToken', json.token);",
+                    "}",
+                    "if (json.user && json.user.id) {",
+                    "  pm.collectionVariables.set('userId', json.user.id);",
+                    "}"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "GET Me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "description": "Retorna o usuário autenticado."
+          }
+        },
+        {
+          "name": "PUT Me",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "users",
+                "me"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Maria Silva Atualizada\",\n  \"phone\": \"11988887777\",\n  \"city\": \"São Paulo\",\n  \"neighborhood\": \"Bela Vista\"\n}"
+            },
+            "description": "Atualiza os dados básicos do usuário autenticado."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Providers",
+      "item": [
+        {
+          "name": "GET Providers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/providers?service=Limpeza&city=São Paulo&neighborhood=Centro&availability=Hoje&bestRating=true",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "providers"
+              ],
+              "query": [
+                {
+                  "key": "service",
+                  "value": "Limpeza"
+                },
+                {
+                  "key": "city",
+                  "value": "São Paulo"
+                },
+                {
+                  "key": "neighborhood",
+                  "value": "Centro"
+                },
+                {
+                  "key": "availability",
+                  "value": "Hoje"
+                },
+                {
+                  "key": "bestRating",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "Lista prestadores com filtros opcionais."
+          }
+        },
+        {
+          "name": "GET Provider By ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/providers/{{providerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "providers",
+                "{{providerId}}"
+              ]
+            },
+            "description": "Busca um prestador pelo id."
+          }
+        },
+        {
+          "name": "GET My Provider Profile",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/providers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "providers",
+                "me"
+              ]
+            },
+            "description": "Retorna o perfil profissional do usuário autenticado, se ele for prestador."
+          }
+        },
+        {
+          "name": "PUT Provider Profile",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/providers/profile",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "providers",
+                "profile"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"photoUrl\": \"https://example.com/foto.jpg\",\n  \"services\": [\"Limpeza\", \"Organização\"],\n  \"professionalDescription\": \"Profissional com experiência em limpeza residencial e comercial.\",\n  \"availability\": \"Segunda a sábado\",\n  \"averagePrice\": \"120\"\n}"
+            },
+            "description": "Cria ou atualiza o perfil profissional do prestador."
+          }
+        },
+        {
+          "name": "GET Provider Reviews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/providers/{{providerId}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "providers",
+                "{{providerId}}",
+                "reviews"
+              ]
+            },
+            "description": "Lista avaliações de um prestador."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Service Requests",
+      "item": [
+        {
+          "name": "POST Service Request",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-requests"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"service\": \"Limpeza\",\n  \"description\": \"Preciso de limpeza completa do apartamento.\",\n  \"desiredDate\": \"2026-06-01\",\n  \"locationNeighborhood\": \"Centro\"\n}"
+            },
+            "description": "Cria uma solicitação de serviço."
+          }
+        },
+        {
+          "name": "GET Service Requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-requests",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-requests"
+              ]
+            },
+            "description": "Lista as solicitações visíveis para o usuário autenticado."
+          }
+        },
+        {
+          "name": "GET Service Request By ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-requests/{{serviceRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-requests",
+                "{{serviceRequestId}}"
+              ]
+            },
+            "description": "Busca uma solicitação específica pelo id."
+          }
+        },
+        {
+          "name": "PUT Service Request Status",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/service-requests/{{serviceRequestId}}/status",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "service-requests",
+                "{{serviceRequestId}}",
+                "status"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"Em negociação\"\n}"
+            },
+            "description": "Atualiza o status da solicitação."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chats",
+      "item": [
+        {
+          "name": "POST Chat Message",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chats/{{serviceRequestId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats",
+                "{{serviceRequestId}}",
+                "messages"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Olá! Estou disponível para falar sobre a solicitação.\"\n}"
+            },
+            "description": "Envia uma mensagem para o chat da solicitação."
+          }
+        },
+        {
+          "name": "GET Chat Messages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/chats/{{serviceRequestId}}/messages",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "chats",
+                "{{serviceRequestId}}",
+                "messages"
+              ]
+            },
+            "description": "Lista as mensagens do chat de uma solicitação."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reviews",
+      "item": [
+        {
+          "name": "POST Review",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/reviews",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "reviews"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"providerId\": \"{{providerId}}\",\n  \"serviceRequestId\": \"{{serviceRequestId}}\",\n  \"rating\": 5,\n  \"comment\": \"Excelente atendimento e serviço muito bem executado.\"\n}"
+            },
+            "description": "Cria uma avaliação para um prestador."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Payments",
+      "item": [
+        {
+          "name": "POST Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"serviceRequestId\": \"{{serviceRequestId}}\",\n  \"amount\": 120,\n  \"paymentMethod\": \"Pix\",\n  \"status\": \"pendente\"\n}"
+            },
+            "description": "Registra um pagamento para uma solicitação."
+          }
+        },
+        {
+          "name": "GET Payment By Service Request",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/payments/{{serviceRequestId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "payments",
+                "{{serviceRequestId}}"
+              ]
+            },
+            "description": "Busca um pagamento pelo id da solicitação."
+          }
+        }
+      ]
+    }
+  ]
+}

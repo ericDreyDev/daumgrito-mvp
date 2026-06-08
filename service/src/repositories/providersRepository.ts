@@ -19,7 +19,7 @@ function parseProvider(row: any) {
     city: row.city,
     neighborhood: row.neighborhood,
     photoUrl: row.photo_url,
-    services: JSON.parse(row.services ?? "[]"),
+    services: Array.isArray(row.services) ? row.services : JSON.parse(row.services ?? "[]"),
     professionalDescription: row.professional_description,
     availability: row.availability,
     averagePrice: row.average_price,
@@ -27,69 +27,72 @@ function parseProvider(row: any) {
   };
 }
 
-export function ensureProviderProfile(userId: string) {
-  const existing = db.prepare("SELECT * FROM provider_profiles WHERE user_id = ?").get(userId);
-  if (!existing) {
-    db.prepare("INSERT INTO provider_profiles (id, user_id) VALUES (?, ?)").run(randomUUID(), userId);
-  }
+export async function ensureProviderProfile(userId: string) {
+  await db.query(
+    `INSERT INTO provider_profiles (id, user_id)
+     VALUES ($1, $2)
+     ON CONFLICT (user_id) DO NOTHING`,
+    [randomUUID(), userId]
+  );
 }
 
-export function upsertProviderProfile(userId: string, input: any) {
-  ensureProviderProfile(userId);
-  db.prepare(
+export async function upsertProviderProfile(userId: string, input: any) {
+  await ensureProviderProfile(userId);
+  await db.query(
     `UPDATE provider_profiles
-     SET photo_url = ?, services = ?, professional_description = ?, availability = ?, average_price = ?
-     WHERE user_id = ?`
-  ).run(
-    input.photoUrl ?? null,
-    JSON.stringify(input.services ?? []),
-    input.professionalDescription ?? null,
-    input.availability ?? null,
-    input.averagePrice ?? null,
-    userId
+     SET photo_url = $1,
+         services = $2::jsonb,
+         professional_description = $3,
+         availability = $4,
+         average_price = $5
+     WHERE user_id = $6`,
+    [
+      input.photoUrl ?? null,
+      JSON.stringify(input.services ?? []),
+      input.professionalDescription ?? null,
+      input.availability ?? null,
+      input.averagePrice ?? null,
+      userId
+    ]
   );
   return findProviderByUserId(userId);
 }
 
-export function findProviderByUserId(userId: string) {
-  const row = db
-    .prepare(
-      `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
-       FROM provider_profiles pp
-       JOIN users u ON u.id = pp.user_id
-       WHERE pp.user_id = ?`
-    )
-    .get(userId);
-  return row ? parseProvider(row) : undefined;
+export async function findProviderByUserId(userId: string) {
+  const result = await db.query(
+    `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
+     FROM provider_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.user_id = $1`,
+    [userId]
+  );
+  return result.rows[0] ? parseProvider(result.rows[0]) : undefined;
 }
 
-export function findProviderById(id: string) {
-  const row = db
-    .prepare(
-      `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
-       FROM provider_profiles pp
-       JOIN users u ON u.id = pp.user_id
-       WHERE pp.id = ?`
-    )
-    .get(id);
-  return row ? parseProvider(row) : undefined;
+export async function findProviderById(id: string) {
+  const result = await db.query(
+    `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
+     FROM provider_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE pp.id = $1`,
+    [id]
+  );
+  return result.rows[0] ? parseProvider(result.rows[0]) : undefined;
 }
 
-export function listProviders(filters: ProviderFilters) {
-  const rows = db
-    .prepare(
-      `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
-       FROM provider_profiles pp
-       JOIN users u ON u.id = pp.user_id
-       WHERE (? IS NULL OR pp.services LIKE ?)
-         AND (? IS NULL OR LOWER(u.city) LIKE LOWER(?))
-         AND (? IS NULL OR LOWER(u.neighborhood) LIKE LOWER(?))
-         AND (? IS NULL OR LOWER(pp.availability) LIKE LOWER(?))
-       ORDER BY
-         CASE WHEN ? = 1 THEN pp.average_rating END DESC,
-         u.name ASC`
-    )
-    .all(
+export async function listProviders(filters: ProviderFilters) {
+  const result = await db.query(
+    `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
+     FROM provider_profiles pp
+     JOIN users u ON u.id = pp.user_id
+     WHERE ($1::text IS NULL OR pp.services::text ILIKE $2)
+       AND ($3::text IS NULL OR u.city ILIKE $4)
+       AND ($5::text IS NULL OR u.neighborhood ILIKE $6)
+       AND ($7::text IS NULL OR pp.availability ILIKE $8)
+     ORDER BY
+       CASE WHEN $9::boolean THEN pp.average_rating END DESC NULLS LAST,
+       u.name ASC`,
+    [
       filters.service ?? null,
       filters.service ? `%${filters.service}%` : null,
       filters.city ?? null,
@@ -98,15 +101,20 @@ export function listProviders(filters: ProviderFilters) {
       filters.neighborhood ? `%${filters.neighborhood}%` : null,
       filters.availability ?? null,
       filters.availability ? `%${filters.availability}%` : null,
-      filters.bestRating ? 1 : 0
-    );
+      Boolean(filters.bestRating)
+    ]
+  );
 
-  return rows.map(parseProvider);
+  return result.rows.map(parseProvider);
 }
 
-export function updateProviderRating(providerId: string) {
-  const result = db
-    .prepare("SELECT AVG(rating) as averageRating FROM reviews WHERE provider_id = ?")
-    .get(providerId) as { averageRating: number | null };
-  db.prepare("UPDATE provider_profiles SET average_rating = ? WHERE id = ?").run(result.averageRating ?? 0, providerId);
+export async function updateProviderRating(providerId: string) {
+  const result = await db.query<{ average_rating: string | null }>(
+    "SELECT AVG(rating)::numeric(3,2) as average_rating FROM reviews WHERE provider_id = $1",
+    [providerId]
+  );
+  await db.query("UPDATE provider_profiles SET average_rating = $1 WHERE id = $2", [
+    result.rows[0]?.average_rating ?? 0,
+    providerId
+  ]);
 }

@@ -11,13 +11,13 @@ const paymentSchema = z.object({
   status: z.enum(["pendente", "pago", "cancelado"]).optional()
 });
 
-export function postPayment(req: Request, res: Response) {
+export async function postPayment(req: Request, res: Response) {
   const input = paymentSchema.parse(req.body);
-  return res.status(201).json(createPayment(input));
+  return res.status(201).json(await createPayment(input));
 }
 
-export function getPayment(req: Request, res: Response) {
-  const payment = findPaymentByServiceRequest(routeParam(req.params.serviceRequestId, "serviceRequestId"));
+export async function getPayment(req: Request, res: Response) {
+  const payment = await findPaymentByServiceRequest(routeParam(req.params.serviceRequestId, "serviceRequestId"));
   if (!payment) throw new AppError(404, "Pagamento não encontrado.");
   return res.json(payment);
 }

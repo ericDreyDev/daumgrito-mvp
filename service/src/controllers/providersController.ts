@@ -18,8 +18,8 @@ const profileSchema = z.object({
   averagePrice: z.string().min(1)
 });
 
-export function getProviders(req: Request, res: Response) {
-  const providers = listProviders({
+export async function getProviders(req: Request, res: Response) {
+  const providers = await listProviders({
     service: req.query.service?.toString(),
     city: req.query.city?.toString(),
     neighborhood: req.query.neighborhood?.toString(),
@@ -29,28 +29,28 @@ export function getProviders(req: Request, res: Response) {
   return res.json(providers);
 }
 
-export function getProvider(req: Request, res: Response) {
-  const provider = findProviderById(routeParam(req.params.id, "id"));
+export async function getProvider(req: Request, res: Response) {
+  const provider = await findProviderById(routeParam(req.params.id, "id"));
   if (!provider) throw new AppError(404, "Prestador não encontrado.");
   return res.json(provider);
 }
 
-export function putProviderProfile(req: Request, res: Response) {
+export async function putProviderProfile(req: Request, res: Response) {
   if (req.user!.userType !== "provider") {
     throw new AppError(403, "Apenas prestadores podem editar o perfil profissional.");
   }
 
   const input = profileSchema.parse(req.body);
-  const provider = upsertProviderProfile(req.user!.id, { ...input, photoUrl: input.photoUrl || null });
+  const provider = await upsertProviderProfile(req.user!.id, { ...input, photoUrl: input.photoUrl || null });
   return res.json(provider);
 }
 
-export function getMyProviderProfile(req: Request, res: Response) {
-  const provider = findProviderByUserId(req.user!.id);
+export async function getMyProviderProfile(req: Request, res: Response) {
+  const provider = await findProviderByUserId(req.user!.id);
   if (!provider) throw new AppError(404, "Perfil de prestador não encontrado.");
   return res.json(provider);
 }
 
-export function getProviderReviews(req: Request, res: Response) {
-  return res.json(listProviderReviews(routeParam(req.params.id, "id")));
+export async function getProviderReviews(req: Request, res: Response) {
+  return res.json(await listProviderReviews(routeParam(req.params.id, "id")));
 }

@@ -14,9 +14,9 @@ export function getMe(req: Request, res: Response) {
   return res.json(req.user);
 }
 
-export function putMe(req: Request, res: Response) {
+export async function putMe(req: Request, res: Response) {
   const input = updateUserSchema.parse(req.body);
-  const user = updateUser(req.user!.id, input);
+  const user = await updateUser(req.user!.id, input);
   if (!user) throw new AppError(404, "Usuário não encontrado.");
   return res.json(user);
 }

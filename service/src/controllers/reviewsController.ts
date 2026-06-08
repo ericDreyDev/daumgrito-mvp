@@ -11,13 +11,13 @@ const reviewSchema = z.object({
   comment: z.string().max(500).optional()
 });
 
-export function postReview(req: Request, res: Response) {
+export async function postReview(req: Request, res: Response) {
   if (req.user!.userType !== "client") {
     throw new AppError(403, "Apenas clientes podem avaliar prestadores.");
   }
 
   const input = reviewSchema.parse(req.body);
-  const review = createReview(req.user!.id, input);
-  updateProviderRating(input.providerId);
+  const review = await createReview(req.user!.id, input);
+  await updateProviderRating(input.providerId);
   return res.status(201).json(review);
 }

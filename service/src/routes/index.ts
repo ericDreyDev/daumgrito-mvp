@@ -18,30 +18,31 @@ import {
 } from "../controllers/serviceRequestsController.js";
 import { getMe, putMe } from "../controllers/usersController.js";
 import { requireAuth } from "../middlewares/auth.js";
+import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const routes = Router();
 
-routes.post("/auth/register", register);
-routes.post("/auth/login", login);
+routes.post("/auth/register", asyncHandler(register));
+routes.post("/auth/login", asyncHandler(login));
 
 routes.get("/users/me", requireAuth, getMe);
-routes.put("/users/me", requireAuth, putMe);
+routes.put("/users/me", requireAuth, asyncHandler(putMe));
 
-routes.get("/providers", getProviders);
-routes.get("/providers/me", requireAuth, getMyProviderProfile);
-routes.get("/providers/:id", getProvider);
-routes.put("/providers/profile", requireAuth, putProviderProfile);
+routes.get("/providers", asyncHandler(getProviders));
+routes.get("/providers/me", requireAuth, asyncHandler(getMyProviderProfile));
+routes.get("/providers/:id", asyncHandler(getProvider));
+routes.put("/providers/profile", requireAuth, asyncHandler(putProviderProfile));
 
-routes.post("/service-requests", requireAuth, postServiceRequest);
-routes.get("/service-requests", requireAuth, getServiceRequests);
-routes.get("/service-requests/:id", requireAuth, getServiceRequest);
-routes.put("/service-requests/:id/status", requireAuth, putServiceRequestStatus);
+routes.post("/service-requests", requireAuth, asyncHandler(postServiceRequest));
+routes.get("/service-requests", requireAuth, asyncHandler(getServiceRequests));
+routes.get("/service-requests/:id", requireAuth, asyncHandler(getServiceRequest));
+routes.put("/service-requests/:id/status", requireAuth, asyncHandler(putServiceRequestStatus));
 
-routes.post("/chats/:serviceRequestId/messages", requireAuth, postChatMessage);
-routes.get("/chats/:serviceRequestId/messages", requireAuth, getChatMessages);
+routes.post("/chats/:serviceRequestId/messages", requireAuth, asyncHandler(postChatMessage));
+routes.get("/chats/:serviceRequestId/messages", requireAuth, asyncHandler(getChatMessages));
 
-routes.post("/reviews", requireAuth, postReview);
-routes.get("/providers/:id/reviews", getProviderReviews);
+routes.post("/reviews", requireAuth, asyncHandler(postReview));
+routes.get("/providers/:id/reviews", asyncHandler(getProviderReviews));
 
-routes.post("/payments", requireAuth, postPayment);
-routes.get("/payments/:serviceRequestId", requireAuth, getPayment);
+routes.post("/payments", requireAuth, asyncHandler(postPayment));
+routes.get("/payments/:serviceRequestId", requireAuth, asyncHandler(getPayment));

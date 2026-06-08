@@ -24,15 +24,15 @@ const loginSchema = z.object({
 export async function register(req: Request, res: Response) {
   const input = registerSchema.parse(req.body);
 
-  if (findUserByEmail(input.email)) {
+  if (await findUserByEmail(input.email)) {
     throw new AppError(409, "Este e-mail já está cadastrado.");
   }
 
   const passwordHash = await bcrypt.hash(input.password, 10);
-  const user = createUser({ ...input, passwordHash });
+  const user = await createUser({ ...input, passwordHash });
 
   if (user.userType === "provider") {
-    ensureProviderProfile(user.id);
+    await ensureProviderProfile(user.id);
   }
 
   return res.status(201).json({ user, token: signToken(user) });
@@ -40,7 +40,7 @@ export async function register(req: Request, res: Response) {
 
 export async function login(req: Request, res: Response) {
   const input = loginSchema.parse(req.body);
-  const userRow = findUserByEmail(input.email);
+  const userRow = await findUserByEmail(input.email);
 
   if (!userRow || !(await bcrypt.compare(input.password, userRow.password_hash))) {
     throw new AppError(401, "E-mail ou senha inválidos.");

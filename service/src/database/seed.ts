@@ -9,8 +9,8 @@ export const serviceCategories = [
 
 export const demoProviders = [
   {
-    userId: "demo-provider-ana",
-    profileId: "demo-profile-ana",
+    userId: "11111111-1111-4111-8111-111111111111",
+    profileId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
     name: "Ana Souza",
     email: "ana.faxina@demo.local",
     phone: "(11) 90000-1001",
@@ -23,8 +23,8 @@ export const demoProviders = [
     averageRating: 4.8
   },
   {
-    userId: "demo-provider-carlos",
-    profileId: "demo-profile-carlos",
+    userId: "22222222-2222-4222-8222-222222222222",
+    profileId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
     name: "Carlos Lima",
     email: "carlos.eletrica@demo.local",
     phone: "(11) 90000-1002",
@@ -37,8 +37,8 @@ export const demoProviders = [
     averageRating: 4.6
   },
   {
-    userId: "demo-provider-marcos",
-    profileId: "demo-profile-marcos",
+    userId: "33333333-3333-4333-8333-333333333333",
+    profileId: "cccccccc-cccc-4ccc-8ccc-cccccccccccc",
     name: "Marcos Oliveira",
     email: "marcos.reparos@demo.local",
     phone: "(11) 90000-1003",
