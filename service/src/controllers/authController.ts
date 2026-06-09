@@ -10,6 +10,7 @@ const registerSchema = z.object({
   name: z.string().min(2),
   email: z.string().email().transform((value) => value.toLowerCase()),
   phone: z.string().min(8),
+  document: z.string().min(6),
   password: z.string().min(6),
   city: z.string().min(2),
   neighborhood: z.string().min(2),

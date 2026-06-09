@@ -14,6 +14,7 @@ export const demoProviders = [
     name: "Ana Souza",
     email: "ana.faxina@demo.local",
     phone: "(11) 90000-1001",
+    document: "111.111.111-11",
     city: "São Paulo",
     neighborhood: "Vila Mariana",
     services: ["Faxineiro(a)", "Manutenção básica"],
@@ -28,6 +29,7 @@ export const demoProviders = [
     name: "Carlos Lima",
     email: "carlos.eletrica@demo.local",
     phone: "(11) 90000-1002",
+    document: "222.222.222-22",
     city: "São Paulo",
     neighborhood: "Tatuapé",
     services: ["Eletricista", "Manutenção básica"],
@@ -42,6 +44,7 @@ export const demoProviders = [
     name: "Marcos Oliveira",
     email: "marcos.reparos@demo.local",
     phone: "(11) 90000-1003",
+    document: "333.333.333-33",
     city: "Guarulhos",
     neighborhood: "Centro",
     services: ["Encanador(a)", "Montador de móveis"],
@@ -49,5 +52,17 @@ export const demoProviders = [
     availability: "Todos os dias",
     averagePrice: "R$ 80 por visita",
     averageRating: 4.9
+  }
+];
+
+export const demoClients = [
+  {
+    userId: "44444444-4444-4444-8444-444444444444",
+    name: "Cliente Demo",
+    email: "cliente@demo.local",
+    phone: "(11) 90000-2001",
+    document: "000.000.000-00",
+    city: "São Paulo",
+    neighborhood: "Vila Mariana"
   }
 ];

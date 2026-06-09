@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Pool } from "pg";
 import { env } from "../config/env.js";
-import { demoProviders, serviceCategories } from "./seed.js";
+import { demoClients, demoProviders, serviceCategories } from "./seed.js";
 
 export const db = new Pool({
   connectionString: env.databaseUrl
@@ -14,6 +14,7 @@ export async function initializeDatabase() {
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       phone TEXT NOT NULL,
+      document TEXT NOT NULL DEFAULT '',
       password_hash TEXT NOT NULL,
       city TEXT NOT NULL,
       neighborhood TEXT NOT NULL,
@@ -77,7 +78,10 @@ export async function initializeDatabase() {
     );
   `);
 
+  await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT ''");
+
   await seedServiceCategories();
+  await seedDemoClients();
   await seedDemoProviders();
 }
 
@@ -95,14 +99,15 @@ async function seedDemoProviders() {
 
   for (const provider of demoProviders) {
     await db.query(
-      `INSERT INTO users (id, name, email, phone, password_hash, city, neighborhood, user_type)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'provider')
+      `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'provider')
        ON CONFLICT (id) DO NOTHING`,
       [
         provider.userId,
         provider.name,
         provider.email,
         provider.phone,
+        provider.document,
         passwordHash,
         provider.city,
         provider.neighborhood
@@ -122,6 +127,28 @@ async function seedDemoProviders() {
         provider.availability,
         provider.averagePrice,
         provider.averageRating
+      ]
+    );
+  }
+}
+
+async function seedDemoClients() {
+  const passwordHash = await bcrypt.hash("demo123", 10);
+
+  for (const client of demoClients) {
+    await db.query(
+      `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'client')
+       ON CONFLICT (id) DO NOTHING`,
+      [
+        client.userId,
+        client.name,
+        client.email,
+        client.phone,
+        client.document,
+        passwordHash,
+        client.city,
+        client.neighborhood
       ]
     );
   }

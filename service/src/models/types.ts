@@ -16,6 +16,7 @@ export interface AuthUser {
   name: string;
   email: string;
   phone: string;
+  document: string;
   city: string;
   neighborhood: string;
   userType: UserType;

@@ -2,10 +2,12 @@ import { randomUUID } from "node:crypto";
 import { db } from "../database/connection.js";
 
 export interface ProviderFilters {
+  name?: string;
   service?: string;
   city?: string;
   neighborhood?: string;
   availability?: string;
+  minRating?: number;
   bestRating?: boolean;
 }
 
@@ -85,14 +87,18 @@ export async function listProviders(filters: ProviderFilters) {
     `SELECT pp.*, u.name, u.email, u.phone, u.city, u.neighborhood
      FROM provider_profiles pp
      JOIN users u ON u.id = pp.user_id
-     WHERE ($1::text IS NULL OR pp.services::text ILIKE $2)
-       AND ($3::text IS NULL OR u.city ILIKE $4)
-       AND ($5::text IS NULL OR u.neighborhood ILIKE $6)
-       AND ($7::text IS NULL OR pp.availability ILIKE $8)
+     WHERE ($1::text IS NULL OR u.name ILIKE $2)
+       AND ($3::text IS NULL OR pp.services::text ILIKE $4)
+       AND ($5::text IS NULL OR u.city ILIKE $6)
+       AND ($7::text IS NULL OR u.neighborhood ILIKE $8)
+       AND ($9::text IS NULL OR pp.availability ILIKE $10)
+       AND ($11::numeric IS NULL OR pp.average_rating >= $11)
      ORDER BY
-       CASE WHEN $9::boolean THEN pp.average_rating END DESC NULLS LAST,
+       CASE WHEN $12::boolean THEN pp.average_rating END DESC NULLS LAST,
        u.name ASC`,
     [
+      filters.name ?? null,
+      filters.name ? `%${filters.name}%` : null,
       filters.service ?? null,
       filters.service ? `%${filters.service}%` : null,
       filters.city ?? null,
@@ -101,6 +107,7 @@ export async function listProviders(filters: ProviderFilters) {
       filters.neighborhood ? `%${filters.neighborhood}%` : null,
       filters.availability ?? null,
       filters.availability ? `%${filters.availability}%` : null,
+      filters.minRating ?? null,
       Boolean(filters.bestRating)
     ]
   );

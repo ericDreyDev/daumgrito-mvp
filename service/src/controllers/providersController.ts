@@ -20,10 +20,12 @@ const profileSchema = z.object({
 
 export async function getProviders(req: Request, res: Response) {
   const providers = await listProviders({
+    name: req.query.name?.toString(),
     service: req.query.service?.toString(),
     city: req.query.city?.toString(),
     neighborhood: req.query.neighborhood?.toString(),
     availability: req.query.availability?.toString(),
+    minRating: req.query.minRating ? Number(req.query.minRating) : undefined,
     bestRating: req.query.bestRating === "true"
   });
   return res.json(providers);
