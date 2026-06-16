@@ -6,7 +6,7 @@ import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
 import 'client_home_screen.dart';
-import 'provider_profile_screen.dart';
+import 'provider_home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
@@ -101,7 +101,12 @@ class _AuthScreenState extends State<AuthScreen> {
 
       if (!mounted) return;
       final nextScreen = result.user.userType == UserType.provider
-          ? ProviderProfileScreen(apiClient: _apiClient)
+          ? ProviderHomeScreen(
+              apiClient: _apiClient,
+              user: result.user,
+              isDarkMode: widget.isDarkMode,
+              onThemeModeChanged: widget.onThemeModeChanged,
+            )
           : ClientHomeScreen(
               apiClient: _apiClient,
               user: result.user,

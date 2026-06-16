@@ -38,6 +38,10 @@ class ServiceRequest {
     required this.status,
     required this.createdAt,
     required this.provider,
+    required this.clientName,
+    required this.clientPhone,
+    required this.clientCity,
+    required this.clientNeighborhood,
     required this.reviewed,
   });
 
@@ -51,9 +55,13 @@ class ServiceRequest {
   final String status;
   final DateTime createdAt;
   final ProviderProfile provider;
+  final String clientName;
+  final String clientPhone;
+  final String clientCity;
+  final String clientNeighborhood;
   final bool reviewed;
 
-  bool get isCompleted => status == 'Concluído' || status == 'ConcluÃ­do';
+  bool get isCompleted => _normalizeStatus(status) == 'concluido';
   bool get canBeReviewed => isCompleted && !reviewed;
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -68,6 +76,10 @@ class ServiceRequest {
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       reviewed: json['reviewed'] as bool? ?? false,
+      clientName: json['client_name'] as String? ?? 'Cliente',
+      clientPhone: json['client_phone'] as String? ?? '',
+      clientCity: json['client_city'] as String? ?? '',
+      clientNeighborhood: json['client_neighborhood'] as String? ?? '',
       provider: ProviderProfile(
         id: json['provider_id'] as String,
         name: json['provider_name'] as String? ?? 'Profissional',
@@ -82,5 +94,14 @@ class ServiceRequest {
         averagePrice: json['provider_average_price'] as String?,
       ),
     );
+  }
+
+  static String _normalizeStatus(String value) {
+    return value
+        .toLowerCase()
+        .replaceAll('í', 'i')
+        .replaceAll('Ã­', 'i')
+        .replaceAll('ú', 'u')
+        .replaceAll('Ãº', 'u');
   }
 }

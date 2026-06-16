@@ -6,6 +6,29 @@ class ProviderService {
 
   final ApiClient _apiClient;
 
+  Future<ProviderProfile> getMyProfile() async {
+    final data = await _apiClient.get('/providers/me') as Map<String, dynamic>;
+    return ProviderProfile.fromJson(data);
+  }
+
+  Future<ProviderProfile> saveProfile({
+    required String photoUrl,
+    required List<String> services,
+    required String professionalDescription,
+    required String availability,
+    required String averagePrice,
+  }) async {
+    final data = await _apiClient.put('/providers/profile', {
+      'photoUrl': photoUrl,
+      'services': services,
+      'professionalDescription': professionalDescription,
+      'availability': availability,
+      'averagePrice': averagePrice,
+    }) as Map<String, dynamic>;
+
+    return ProviderProfile.fromJson(data);
+  }
+
   Future<List<ProviderProfile>> listProviders({
     String? name,
     String? service,

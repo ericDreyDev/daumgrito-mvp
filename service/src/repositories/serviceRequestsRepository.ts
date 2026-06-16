@@ -38,10 +38,10 @@ function serviceRequestSelect() {
   return `
     SELECT
       sr.*,
-      u.name AS provider_name,
-      u.phone AS provider_phone,
-      u.city AS provider_city,
-      u.neighborhood AS provider_neighborhood,
+      provider_user.name AS provider_name,
+      provider_user.phone AS provider_phone,
+      provider_user.city AS provider_city,
+      provider_user.neighborhood AS provider_neighborhood,
       pp.user_id AS provider_user_id,
       pp.photo_url AS provider_photo_url,
       pp.services AS provider_services,
@@ -49,11 +49,16 @@ function serviceRequestSelect() {
       pp.availability AS provider_availability,
       pp.average_price AS provider_average_price,
       pp.average_rating AS provider_average_rating,
+      client_user.name AS client_name,
+      client_user.phone AS client_phone,
+      client_user.city AS client_city,
+      client_user.neighborhood AS client_neighborhood,
       EXISTS (
         SELECT 1 FROM reviews r WHERE r.service_request_id = sr.id
       ) AS reviewed
     FROM service_requests sr
     JOIN provider_profiles pp ON pp.id = sr.provider_id
-    JOIN users u ON u.id = pp.user_id
+    JOIN users provider_user ON provider_user.id = pp.user_id
+    JOIN users client_user ON client_user.id = sr.client_id
   `;
 }
