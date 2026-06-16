@@ -5,11 +5,18 @@ import '../models/user.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
-import 'provider_list_screen.dart';
+import 'client_home_screen.dart';
 import 'provider_profile_screen.dart';
 
 class AuthScreen extends StatefulWidget {
-  const AuthScreen({super.key});
+  const AuthScreen({
+    this.isDarkMode = false,
+    this.onThemeModeChanged,
+    super.key,
+  });
+
+  final bool isDarkMode;
+  final ValueChanged<bool>? onThemeModeChanged;
 
   @override
   State<AuthScreen> createState() => _AuthScreenState();
@@ -95,7 +102,12 @@ class _AuthScreenState extends State<AuthScreen> {
       if (!mounted) return;
       final nextScreen = result.user.userType == UserType.provider
           ? ProviderProfileScreen(apiClient: _apiClient)
-          : ProviderListScreen(apiClient: _apiClient, user: result.user);
+          : ClientHomeScreen(
+              apiClient: _apiClient,
+              user: result.user,
+              isDarkMode: widget.isDarkMode,
+              onThemeModeChanged: widget.onThemeModeChanged,
+            );
 
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
     } on ApiException catch (error) {
@@ -219,7 +231,7 @@ class _AuthScreenState extends State<AuthScreen> {
       key: const ValueKey('register-fields'),
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Você quer usar o app como:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+        Text('Você quer usar o app como:', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 10),
         Row(
           children: [
@@ -278,7 +290,7 @@ class _AuthScreenState extends State<AuthScreen> {
         const SizedBox(height: 18),
         const Divider(),
         const SizedBox(height: 8),
-        Text('Dados profissionais', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+        Text('Dados profissionais', style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         TextFormField(controller: _photoController, decoration: const InputDecoration(labelText: 'URL da foto de perfil')),
         const SizedBox(height: 12),
@@ -303,7 +315,8 @@ class _AuthScreenState extends State<AuthScreen> {
             final selected = _selectedServices.contains(category.name);
             return FilterChip(
               selected: selected,
-              label: Text('${category.icon} ${category.name}'),
+              avatar: Icon(category.icon, size: 18),
+              label: Text(category.name),
               onSelected: (value) => setState(() {
                 if (value) {
                   _selectedServices.add(category.name);
@@ -351,7 +364,7 @@ class _ProfileOption extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: selected ? colors.primaryContainer : Colors.white,
+          color: selected ? colors.primaryContainer : colors.surface,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: selected ? colors.primary : const Color(0xFFD7DEE8), width: selected ? 1.7 : 1),
         ),

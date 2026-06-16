@@ -22,7 +22,7 @@ class ProviderDetailScreen extends StatelessWidget {
     final colors = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes do profissional')),
+      appBar: AppBar(title: const Text('Profissional')),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
@@ -73,7 +73,7 @@ class ProviderDetailScreen extends StatelessWidget {
                   Row(
                     children: [
                       CircleAvatar(
-                        radius: 36,
+                        radius: 38,
                         backgroundColor: colors.primaryContainer,
                         foregroundColor: colors.onPrimaryContainer,
                         child: Text(
@@ -86,9 +86,9 @@ class ProviderDetailScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(provider.name, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
+                            Text(provider.name, style: Theme.of(context).textTheme.headlineSmall),
                             const SizedBox(height: 4),
-                            Text('${provider.city}, ${provider.neighborhood}', style: const TextStyle(color: Color(0xFF667085))),
+                            Text('${provider.city}, ${provider.neighborhood}'),
                           ],
                         ),
                       ),
@@ -133,11 +133,11 @@ class ProviderDetailScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _SectionCard(
+          const _SectionCard(
             title: 'Avaliações',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 _ReviewPreview(name: 'Cliente verificado', text: 'Atendimento rápido, educado e serviço bem feito.', rating: '5.0'),
                 SizedBox(height: 10),
                 _ReviewPreview(name: 'Serviço recente', text: 'Combinou horário e explicou tudo antes de começar.', rating: '4.8'),
@@ -192,7 +192,7 @@ class _SectionCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 12),
             child,
           ],

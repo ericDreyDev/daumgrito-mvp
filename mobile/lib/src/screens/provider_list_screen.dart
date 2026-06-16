@@ -71,8 +71,6 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
       if (providerPrice == null || providerPrice > maxPrice) return false;
     }
 
-    // A data desejada ainda não filtra agenda real no MVP; ela guia a solicitação
-    // e fica pronta para a futura camada de disponibilidade/calendário.
     return true;
   }
 
@@ -109,145 +107,233 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
       initialDate: _desiredDate ?? DateTime.now(),
     );
 
-    if (date != null) {
-      setState(() => _desiredDate = date);
-    }
+    if (date != null) setState(() => _desiredDate = date);
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async => _search(),
-          child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return SafeArea(
+      child: RefreshIndicator(
+        onRefresh: () async => _search(),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const AppLogo(compact: true),
+                IconButton.filledTonal(
+                  onPressed: _search,
+                  icon: const Icon(Icons.refresh_rounded),
+                  tooltip: 'Atualizar',
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            _HeroPanel(userName: widget.user.name),
+            const SizedBox(height: 16),
+            _SearchPanel(
+              nameController: _nameController,
+              cityController: _cityController,
+              neighborhoodController: _neighborhoodController,
+              selectedDate: _desiredDate,
+              minRating: _minRating,
+              maxAveragePrice: _maxAveragePrice,
+              bestRating: _bestRating,
+              onDateTap: _pickDate,
+              onRatingChanged: (value) => setState(() => _minRating = value),
+              onPriceChanged: (value) => setState(() => _maxAveragePrice = value),
+              onBestRatingChanged: (value) => setState(() => _bestRating = value),
+              onSearch: _search,
+              onClear: _clearFilters,
+            ),
+            const SizedBox(height: 18),
+            Text('Escolha uma categoria', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 10),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
                 children: [
-                  const AppLogo(),
-                  IconButton.filledTonal(
-                    onPressed: _search,
-                    icon: const Icon(Icons.refresh_rounded),
-                    tooltip: 'Atualizar',
+                  ServiceCategoryChip(
+                    category: const ServiceCategory(name: 'Todos', icon: Icons.apps_rounded),
+                    isSelected: _selectedService == null,
+                    onTap: () {
+                      setState(() => _selectedService = null);
+                      _search();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  ...serviceCategories.map(
+                    (category) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: ServiceCategoryChip(
+                        category: category,
+                        isSelected: _selectedService == category.name,
+                        onTap: () {
+                          setState(() => _selectedService = category.name);
+                          _search();
+                        },
+                      ),
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 18),
-              Text('Qual serviço você quer resolver?', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 6),
-              Text('Escolha como em uma corrida: serviço, região, data e o melhor profissional para você.', style: Theme.of(context).textTheme.bodyMedium),
-              const SizedBox(height: 16),
-              _SearchPanel(
-                nameController: _nameController,
-                cityController: _cityController,
-                neighborhoodController: _neighborhoodController,
-                selectedDate: _desiredDate,
-                minRating: _minRating,
-                maxAveragePrice: _maxAveragePrice,
-                bestRating: _bestRating,
-                onDateTap: _pickDate,
-                onRatingChanged: (value) => setState(() => _minRating = value),
-                onPriceChanged: (value) => setState(() => _maxAveragePrice = value),
-                onBestRatingChanged: (value) => setState(() => _bestRating = value),
-                onSearch: _search,
-                onClear: _clearFilters,
-              ),
-              const SizedBox(height: 18),
-              Text('Categoria', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-              const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
+            ),
+            const SizedBox(height: 20),
+            FutureBuilder<List<ProviderProfile>>(
+              future: _futureProviders,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.only(top: 48),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                if (snapshot.hasError) {
+                  return _EmptyState(
+                    icon: Icons.cloud_off_rounded,
+                    title: 'Não conseguimos carregar agora',
+                    description: 'Verifique se a API está rodando e tente novamente.',
+                    actionLabel: 'Tentar de novo',
+                    onAction: _search,
+                  );
+                }
+
+                final providers = snapshot.data ?? [];
+                if (providers.isEmpty) {
+                  return _EmptyState(
+                    icon: Icons.search_off_rounded,
+                    title: 'Nenhum profissional encontrado',
+                    description: 'Ajuste preço, nota, cidade ou categoria para ampliar as opções.',
+                    actionLabel: 'Limpar filtros',
+                    onAction: _clearFilters,
+                  );
+                }
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ServiceCategoryChip(
-                      category: const ServiceCategory(name: 'Todos', icon: '•'),
-                      isSelected: _selectedService == null,
-                      onTap: () {
-                        setState(() => _selectedService = null);
-                        _search();
-                      },
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${providers.length} opções disponíveis',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: _clearFilters,
+                          icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                          label: const Text('Limpar'),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    ...serviceCategories.map(
-                      (category) => Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: ServiceCategoryChip(
-                          category: category,
-                          isSelected: _selectedService == category.name,
+                    const SizedBox(height: 10),
+                    ...providers.map(
+                      (provider) => Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: ProviderCard(
+                          provider: provider,
                           onTap: () {
-                            setState(() => _selectedService = category.name);
-                            _search();
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ProviderDetailScreen(
+                                  apiClient: widget.apiClient,
+                                  provider: provider,
+                                  desiredDate: _desiredDate,
+                                ),
+                              ),
+                            );
                           },
                         ),
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(height: 20),
-              FutureBuilder<List<ProviderProfile>>(
-                future: _futureProviders,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Padding(
-                      padding: EdgeInsets.only(top: 48),
-                      child: Center(child: CircularProgressIndicator()),
-                    );
-                  }
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-                  if (snapshot.hasError) {
-                    return _EmptyState(
-                      icon: Icons.cloud_off_rounded,
-                      title: 'Não conseguimos carregar agora',
-                      description: 'Verifique se a API está rodando e tente novamente.',
-                      actionLabel: 'Tentar de novo',
-                      onAction: _search,
-                    );
-                  }
+class _HeroPanel extends StatelessWidget {
+  const _HeroPanel({required this.userName});
 
-                  final providers = snapshot.data ?? [];
-                  if (providers.isEmpty) {
-                    return _EmptyState(
-                      icon: Icons.search_off_rounded,
-                      title: 'Nenhum profissional encontrado',
-                      description: 'Ajuste preço, nota, cidade ou categoria para ampliar as opções.',
-                      actionLabel: 'Limpar filtros',
-                      onAction: _clearFilters,
-                    );
-                  }
+  final String userName;
 
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('${providers.length} opções disponíveis', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-                      const SizedBox(height: 12),
-                      ...providers.map(
-                        (provider) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ProviderCard(
-                            provider: provider,
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ProviderDetailScreen(
-                                    apiClient: widget.apiClient,
-                                    provider: provider,
-                                    desiredDate: _desiredDate,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  );
-                },
-              ),
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFF12343B),
+        borderRadius: BorderRadius.circular(22),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Olá, ${_firstName(userName)}',
+            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Encontre um profissional, compare opções e envie sua solicitação em poucos passos.',
+            style: TextStyle(color: Color(0xFFD9E8EA), fontSize: 15),
+          ),
+          const SizedBox(height: 16),
+          const Row(
+            children: [
+              _HeroHint(icon: Icons.verified_user_rounded, label: 'Avaliações'),
+              SizedBox(width: 10),
+              _HeroHint(icon: Icons.chat_bubble_rounded, label: 'Chat'),
+              SizedBox(width: 10),
+              _HeroHint(icon: Icons.receipt_long_rounded, label: 'Pedido'),
             ],
           ),
+        ],
+      ),
+    );
+  }
+
+  String _firstName(String value) {
+    final parts = value.trim().split(' ');
+    return parts.isEmpty || parts.first.isEmpty ? 'cliente' : parts.first;
+  }
+}
+
+class _HeroHint extends StatelessWidget {
+  const _HeroHint({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: Colors.white, size: 17),
+            const SizedBox(width: 5),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -297,7 +383,7 @@ class _SearchPanel extends StatelessWidget {
               children: [
                 const Icon(Icons.tune_rounded),
                 const SizedBox(width: 8),
-                Text('Defina sua busca', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                Text('Defina sua busca', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 14),
@@ -343,7 +429,7 @@ class _SearchPanel extends StatelessWidget {
               onChanged: onRatingChanged,
             ),
             const SizedBox(height: 4),
-            Text('Preço médio até'),
+            const Text('Preço médio até'),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -370,7 +456,7 @@ class _SearchPanel extends StatelessWidget {
                   child: FilledButton.icon(
                     onPressed: onSearch,
                     icon: const Icon(Icons.search_rounded),
-                    label: const Text('Buscar profissionais'),
+                    label: const Text('Buscar'),
                   ),
                 ),
               ],
@@ -435,7 +521,7 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(description, textAlign: TextAlign.center),
             const SizedBox(height: 18),

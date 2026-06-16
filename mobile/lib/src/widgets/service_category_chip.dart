@@ -32,7 +32,11 @@ class ServiceCategoryChip extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(category.icon, style: const TextStyle(fontSize: 18)),
+            Icon(
+              category.icon,
+              size: 18,
+              color: isSelected ? Colors.white : colors.primary,
+            ),
             const SizedBox(width: 8),
             Text(
               category.name,

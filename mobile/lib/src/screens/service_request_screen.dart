@@ -116,7 +116,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.provider.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                          Text(widget.provider.name, style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 3),
                           Text(widget.provider.averagePrice ?? 'Valor a combinar'),
                         ],
@@ -133,7 +133,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Conte o que você precisa', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                    Text('Conte o que você precisa', style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
                       value: _selectedService,
@@ -223,7 +223,7 @@ class _SuccessSheet extends StatelessWidget {
           Text(
             'Solicitação enviada',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
           Text(
