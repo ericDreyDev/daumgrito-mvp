@@ -52,19 +52,41 @@ class _AccountScreenState extends State<AccountScreen> {
           const SizedBox(height: 18),
           Text('Conta', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
-          Text('Veja seus dados, ajuste preferências e saia da sessão quando precisar.', style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+              'Veja seus dados, ajuste preferências e saia da sessão quando precisar.',
+              style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
           _ProfileHeader(user: widget.user),
           const SizedBox(height: 14),
           _SectionCard(
             title: 'Informações do perfil',
             children: [
-              _InfoLine(icon: Icons.person_rounded, label: 'Nome', value: widget.user.name),
-              _InfoLine(icon: Icons.mail_rounded, label: 'E-mail', value: widget.user.email),
-              _InfoLine(icon: Icons.phone_rounded, label: 'Telefone', value: widget.user.phone),
-              _InfoLine(icon: Icons.badge_rounded, label: 'CPF / CNPJ', value: widget.user.document.isEmpty ? 'Não informado' : widget.user.document),
-              _InfoLine(icon: Icons.location_city_rounded, label: 'Cidade', value: widget.user.city),
-              _InfoLine(icon: Icons.place_rounded, label: 'Bairro', value: widget.user.neighborhood),
+              _InfoLine(
+                  icon: Icons.person_rounded,
+                  label: 'Nome',
+                  value: widget.user.name),
+              _InfoLine(
+                  icon: Icons.mail_rounded,
+                  label: 'E-mail',
+                  value: widget.user.email),
+              _InfoLine(
+                  icon: Icons.phone_rounded,
+                  label: 'Telefone',
+                  value: widget.user.phone),
+              _InfoLine(
+                  icon: Icons.badge_rounded,
+                  label: 'CPF / CNPJ',
+                  value: widget.user.document.isEmpty
+                      ? 'Não informado'
+                      : widget.user.document),
+              _InfoLine(
+                  icon: Icons.location_city_rounded,
+                  label: 'Cidade',
+                  value: widget.user.city),
+              _InfoLine(
+                  icon: Icons.place_rounded,
+                  label: 'Bairro',
+                  value: widget.user.neighborhood),
             ],
           ),
           const SizedBox(height: 14),
@@ -89,14 +111,16 @@ class _AccountScreenState extends State<AccountScreen> {
                 title: const Text('Notificações'),
                 subtitle: const Text('Receber avisos sobre solicitações'),
                 secondary: const Icon(Icons.notifications_active_rounded),
-                onChanged: (value) => setState(() => _notificationsEnabled = value),
+                onChanged: (value) =>
+                    setState(() => _notificationsEnabled = value),
               ),
               const Divider(),
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.lock_outline_rounded),
                 title: const Text('Privacidade e segurança'),
-                subtitle: const Text('Configurações previstas para próximas versões'),
+                subtitle:
+                    const Text('Configurações previstas para próximas versões'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => _showComingSoon('Privacidade e segurança'),
               ),
@@ -110,7 +134,8 @@ class _AccountScreenState extends State<AccountScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.help_outline_rounded),
                 title: const Text('Central de ajuda'),
-                subtitle: const Text('Tire dúvidas sobre pedidos e profissionais'),
+                subtitle:
+                    const Text('Tire dúvidas sobre pedidos e profissionais'),
                 trailing: const Icon(Icons.chevron_right_rounded),
                 onTap: () => _showComingSoon('Central de ajuda'),
               ),
@@ -166,16 +191,24 @@ class _ProfileHeader extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 34,
-              child: Text(user.name.isEmpty ? '?' : user.name.characters.first.toUpperCase(), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900)),
+              child: Text(
+                  user.name.isEmpty
+                      ? '?'
+                      : user.name.characters.first.toUpperCase(),
+                  style: const TextStyle(
+                      fontSize: 24, fontWeight: FontWeight.w900)),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(user.name, style: Theme.of(context).textTheme.titleLarge),
+                  Text(user.name,
+                      style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 3),
-                  Text(user.userType == UserType.client ? 'Cliente' : 'Prestador'),
+                  Text(user.userType == UserType.client
+                      ? 'Cliente'
+                      : 'Prestador'),
                 ],
               ),
             ),
@@ -238,7 +271,8 @@ class _InfoLine extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(value,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
               ],
             ),
           ),

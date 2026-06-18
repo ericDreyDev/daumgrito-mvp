@@ -61,7 +61,18 @@ class ServiceRequest {
   final String clientNeighborhood;
   final bool reviewed;
 
-  bool get isCompleted => _normalizeStatus(status) == 'concluido';
+  bool get isWaiting =>
+      _normalizeStatus(status) == 'aguardando aceite' ||
+      _normalizeStatus(status) == 'solicitado';
+  bool get isAccepted =>
+      _normalizeStatus(status) == 'aceito' ||
+      _normalizeStatus(status) == 'agendado';
+  bool get isCompleted =>
+      _normalizeStatus(status) == 'finalizado' ||
+      _normalizeStatus(status) == 'concluido';
+  bool get isCanceled =>
+      _normalizeStatus(status) == 'cancelado' ||
+      _normalizeStatus(status) == 'recusado';
   bool get canBeReviewed => isCompleted && !reviewed;
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -83,13 +94,31 @@ class ServiceRequest {
       provider: ProviderProfile(
         id: json['provider_id'] as String,
         name: json['provider_name'] as String? ?? 'Profissional',
+        email: json['provider_email'] as String? ?? '',
         phone: json['provider_phone'] as String? ?? '',
+        document: json['provider_document'] as String? ?? '',
         city: json['provider_city'] as String? ?? '',
         neighborhood: json['provider_neighborhood'] as String? ?? '',
-        services: List<String>.from(json['provider_services'] as List<dynamic>? ?? const []),
-        averageRating: double.tryParse(json['provider_average_rating'].toString()) ?? 0,
+        services: List<String>.from(
+            json['provider_services'] as List<dynamic>? ?? const []),
+        averageRating:
+            double.tryParse(json['provider_average_rating'].toString()) ?? 0,
+        documents: const [],
+        validationStatus:
+            json['provider_validation_status'] as String? ?? 'Pendente',
+        serviceRadiusKm:
+            (json['provider_service_radius_km'] as num?)?.toInt() ?? 10,
+        useCurrentLocation:
+            json['provider_use_current_location'] as bool? ?? false,
+        isOnline: json['provider_is_online'] as bool? ?? false,
+        completedServicesCount: 0,
         photoUrl: json['provider_photo_url'] as String?,
-        professionalDescription: json['provider_professional_description'] as String?,
+        professionalDescription:
+            json['provider_professional_description'] as String?,
+        experience: json['provider_experience'] as String?,
+        baseAddress: json['provider_base_address'] as String?,
+        serviceCity: json['provider_service_city'] as String?,
+        serviceNeighborhood: json['provider_service_neighborhood'] as String?,
         availability: json['provider_availability'] as String?,
         averagePrice: json['provider_average_price'] as String?,
       ),
@@ -99,9 +128,11 @@ class ServiceRequest {
   static String _normalizeStatus(String value) {
     return value
         .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('ã', 'a')
+        .replaceAll('ç', 'c')
         .replaceAll('í', 'i')
-        .replaceAll('Ã­', 'i')
-        .replaceAll('ú', 'u')
-        .replaceAll('Ãº', 'u');
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u');
   }
 }

@@ -5,17 +5,22 @@ MVP para conectar clientes que precisam contratar serviços domiciliares com pre
 ## Estrutura
 
 - `service`: API Node.js + Express + TypeScript, autenticação JWT e PostgreSQL.
-- `mobile`: base Flutter do aplicativo.
-- `app`: interface web React + Vite mantida como protótipo web para validar fluxos rapidamente.
+- `mobile`: app Flutter principal.
+- `app`: protótipo web React + Vite para validar fluxos rapidamente.
 
-## Funcionalidades já estruturadas
+## Funcionalidades estruturadas
 
 - Cadastro e login de clientes e prestadores.
-- Perfil de prestador com serviços, descrição, disponibilidade, valor e avaliação média.
-- Listagem e filtros de prestadores por serviço, cidade, bairro, disponibilidade e melhor avaliação.
-- Detalhes do prestador e criação de solicitação de serviço.
-- Rotas para chat, avaliações e pagamento simulado.
-- Banco PostgreSQL com tabelas principais e prestadores de demonstração.
+- Perfil profissional do prestador com dados pessoais, descrição, experiência, categorias, documentos e selfie.
+- Localização e área de atendimento do prestador.
+- Controle online/offline do prestador.
+- Validação do cadastro do prestador: `Pendente`, `Aprovado` ou `Reprovado`.
+- Listagem pública de prestadores apenas quando aprovados e online.
+- Solicitações de serviços para prestadores.
+- Aba de solicitações recebidas para prestadores.
+- Aba de histórico de atendimentos para prestadores, com filtros por data, categoria, status e avaliação.
+- Perfil público do prestador para clientes, com avaliação média, região, serviços realizados e comentários.
+- Chat demonstrativo, avaliações e pagamento simulado.
 
 ## Rodando localmente
 
@@ -42,22 +47,23 @@ npm run dev
 
 A API roda em `http://localhost:3333`.
 
-### 3. App Flutter
+Para Flutter Web, o navegador pode abrir o app em uma porta local aleatória. Em desenvolvimento, deixe o CORS assim no `.env` da API:
 
-A pasta `mobile` já contém a estrutura inicial de código Flutter. Para gerar as plataformas Android/iOS/Web na primeira vez:
+```bash
+CORS_ORIGIN=http://localhost:5173,http://localhost:*
+```
+
+### 3. App Flutter
 
 ```bash
 cd mobile
-flutter create .
 flutter pub get
 flutter run
 ```
 
-No emulador Android, a API local é acessada por `http://10.0.2.2:3333`, já configurado no `ApiClient`.
+No emulador Android, ajuste o `ApiClient` para usar `http://10.0.2.2:3333` se necessário.
 
 ### 4. Protótipo web React
-
-Em outro terminal:
 
 ```bash
 cd app
@@ -66,6 +72,50 @@ npm run dev
 ```
 
 O protótipo web roda em `http://localhost:5173`.
+
+## Módulo Perfil do Prestador
+
+### Telas Flutter
+
+- `ProviderHomeScreen`: navegação exclusiva do prestador.
+- `ProviderProfileScreen`: edição do perfil profissional, validação, documentos, localização e disponibilidade.
+- `ProviderRequestsScreen`: aba de solicitações recebidas.
+- `ProviderRequestDetailScreen`: detalhe da solicitação e ações de atendimento.
+- `ProviderHistoryScreen`: histórico de atendimentos com filtros.
+- `ProviderScheduleScreen`: agenda demonstrativa.
+- `ProviderDetailScreen`: perfil público do prestador visto pelo cliente.
+
+### Componentes e modelos
+
+- `ProviderProfile`: modelo completo do prestador.
+- `ServiceRequest`: modelo de solicitação com status normalizados.
+- `RequestStatusTimeline`: linha de progresso da solicitação.
+- `ProviderService`: API client para perfil, listagem pública e disponibilidade.
+- `ServiceRequestService`: API client para solicitações.
+- `ReviewService`: API client para avaliações.
+
+### Modelo de dados do prestador
+
+O perfil do prestador inclui:
+
+- `name`, `email`, `phone`, `document`
+- `photoUrl`
+- `professionalDescription`
+- `experience`
+- `services`
+- `documents`
+- `selfieUrl`
+- `validationStatus`: `Pendente`, `Aprovado`, `Reprovado`
+- `baseAddress`
+- `serviceCity`
+- `serviceNeighborhood`
+- `serviceRadiusKm`
+- `useCurrentLocation`
+- `isOnline`
+- `availability`
+- `averagePrice`
+- `averageRating`
+- `completedServicesCount`
 
 ## Rotas principais da API
 
@@ -83,7 +133,10 @@ O protótipo web roda em `http://localhost:5173`.
 
 - `GET /providers`
 - `GET /providers/:id`
+- `GET /providers/:id/reviews`
+- `GET /providers/me`
 - `PUT /providers/profile`
+- `PATCH /providers/availability`
 
 ### Solicitações
 
@@ -91,6 +144,15 @@ O protótipo web roda em `http://localhost:5173`.
 - `GET /service-requests`
 - `GET /service-requests/:id`
 - `PUT /service-requests/:id/status`
+
+Status de solicitação:
+
+- `Aguardando aceite`
+- `Aceito`
+- `Recusado`
+- `Em andamento`
+- `Finalizado`
+- `Cancelado`
 
 ### Chat
 
@@ -107,29 +169,36 @@ O protótipo web roda em `http://localhost:5173`.
 - `POST /payments`
 - `GET /payments/:serviceRequestId`
 
+## Regras de negócio aplicadas
+
+- Apenas usuários `provider` acessam o perfil interno de prestador, solicitações recebidas e histórico.
+- Cliente não acessa telas internas do prestador no app Flutter.
+- Prestador edita o próprio perfil, documentos, localização e disponibilidade.
+- Prestador não altera avaliações recebidas.
+- Prestador não altera `validationStatus`; aprovação/reprovação é responsabilidade administrativa.
+- Prestador só aparece para clientes se estiver `Aprovado` e `isOnline = true`.
+- Cliente só cria solicitação para prestador aprovado e online.
+- Prestador pendente ou reprovado não recebe solicitações.
+- Apenas prestadores alteram status da solicitação.
+- O cliente avalia apenas solicitações finalizadas.
+
 ## Usuários demo
 
-O banco cria prestadores de exemplo automaticamente. Para entrar como prestador demo, use:
+O banco cria prestadores e cliente de exemplo automaticamente.
+
+Prestador demo:
 
 - E-mail: `ana.faxina@demo.local`
 - Senha: `demo123`
 
-Também é possível criar novas contas pelo app.
+Cliente demo:
 
-## O que ainda falta aprimorar nas funcionalidades principais
-
-- Chat no front-end/app: tela de conversa, envio de mensagem, polling ou WebSocket e indicadores de autor/data.
-- Avaliações no front-end/app: liberar avaliação quando a solicitação estiver `Concluído`, listar comentários no perfil do prestador e recalcular média.
-- Jornada do prestador: editar perfil completo, ver solicitações recebidas, alterar status, responder chat e registrar disponibilidade.
-- Jornada do cliente: acompanhar solicitações, cancelar, confirmar conclusão e consultar pagamentos.
-- Pagamento simulado: tela de criação/visualização de pagamento e status.
-- Autorização: garantir que só cliente/prestador envolvidos acessem chat, solicitação, avaliação e pagamento.
-- Persistência de sessão no Flutter com `shared_preferences`.
-- Testes automatizados da API e validações mais ricas.
+- E-mail: `cliente@demo.local`
+- Senha: `demo123`
 
 ## Próximos passos naturais
 
-- Criar telas completas para chat, avaliações e pagamento.
-- Adicionar regras de autorização por solicitação.
-- Adicionar testes automatizados da API.
-- Completar cadastro no Flutter e telas específicas de cliente/prestador.
+- Criar fluxo administrativo para aprovar/reprovar prestadores.
+- Persistir respostas públicas de prestadores às avaliações.
+- Completar autorização por relacionamento em chat, pagamento, avaliação e solicitação.
+- Evoluir upload real de documentos/selfie em vez de URLs/campos textuais.

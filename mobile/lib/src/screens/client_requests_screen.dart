@@ -36,13 +36,15 @@ class _ClientRequestsScreenState extends State<ClientRequestsScreen> {
 
   List<ServiceRequest> _filterRequests(List<ServiceRequest> requests) {
     if (_filter == 'Abertas') {
-      return requests.where((request) => !request.isCompleted && request.status != 'Cancelado').toList();
+      return requests
+          .where((request) => !request.isCompleted && !request.isCanceled)
+          .toList();
     }
     if (_filter == 'Concluídas') {
       return requests.where((request) => request.isCompleted).toList();
     }
     if (_filter == 'Canceladas') {
-      return requests.where((request) => request.status == 'Cancelado').toList();
+      return requests.where((request) => request.isCanceled).toList();
     }
     return requests;
   }
@@ -87,7 +89,8 @@ class _ClientRequestsScreenState extends State<ClientRequestsScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ['Abertas', 'Todas', 'Concluídas', 'Canceladas'].map((filter) {
+                children: ['Abertas', 'Todas', 'Concluídas', 'Canceladas']
+                    .map((filter) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -125,7 +128,8 @@ class _ClientRequestsScreenState extends State<ClientRequestsScreen> {
                   return _EmptyRequests(
                     icon: Icons.receipt_long_rounded,
                     title: 'Nenhuma solicitação aqui',
-                    message: 'Quando você solicitar um serviço, ele aparecerá nesta lista.',
+                    message:
+                        'Quando você solicitar um serviço, ele aparecerá nesta lista.',
                     actionLabel: 'Atualizar',
                     onAction: _reload,
                   );
@@ -168,14 +172,24 @@ class _RequestSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final open = requests.where((request) => !request.isCompleted && request.status != 'Cancelado').length;
+    final open = requests
+        .where((request) => !request.isCompleted && !request.isCanceled)
+        .length;
     final completed = requests.where((request) => request.isCompleted).length;
 
     return Row(
       children: [
-        Expanded(child: _SummaryTile(label: 'Abertas', value: open.toString(), icon: Icons.pending_actions_rounded)),
+        Expanded(
+            child: _SummaryTile(
+                label: 'Abertas',
+                value: open.toString(),
+                icon: Icons.pending_actions_rounded)),
         const SizedBox(width: 10),
-        Expanded(child: _SummaryTile(label: 'Concluídas', value: completed.toString(), icon: Icons.verified_rounded)),
+        Expanded(
+            child: _SummaryTile(
+                label: 'Concluídas',
+                value: completed.toString(),
+                icon: Icons.verified_rounded)),
       ],
     );
   }
@@ -237,13 +251,16 @@ class _RequestCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(child: Text(request.provider.name.characters.first.toUpperCase())),
+                  CircleAvatar(
+                      child: Text(request.provider.name.characters.first
+                          .toUpperCase())),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(request.service, style: Theme.of(context).textTheme.titleMedium),
+                        Text(request.service,
+                            style: Theme.of(context).textTheme.titleMedium),
                         Text(request.provider.name),
                       ],
                     ),
@@ -256,7 +273,8 @@ class _RequestCard extends StatelessWidget {
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.event_rounded, size: 18, color: Color(0xFF667085)),
+                  const Icon(Icons.event_rounded,
+                      size: 18, color: Color(0xFF516070)),
                   const SizedBox(width: 6),
                   Text(_formatDate(request.desiredDate)),
                   const Spacer(),
@@ -288,7 +306,8 @@ class _StatusPill extends StatelessWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(status, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+      child: Text(status,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
     );
   }
 }
@@ -317,7 +336,9 @@ class _EmptyRequests extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 18),

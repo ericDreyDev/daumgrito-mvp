@@ -1,12 +1,14 @@
 export type UserType = "client" | "provider";
 
 export type RequestStatus =
-  | "Solicitado"
-  | "Em negociação"
-  | "Agendado"
+  | "Aguardando aceite"
+  | "Aceito"
+  | "Recusado"
   | "Em andamento"
-  | "Concluído"
+  | "Finalizado"
   | "Cancelado";
+
+export type ProviderValidationStatus = "Pendente" | "Aprovado" | "Reprovado";
 
 export type PaymentMethod = "Pix" | "cartão" | "dinheiro";
 export type PaymentStatus = "pendente" | "pago" | "cancelado";

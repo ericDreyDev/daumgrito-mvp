@@ -36,13 +36,19 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
 
   List<ServiceRequest> _filterRequests(List<ServiceRequest> requests) {
     if (_filter == 'Novas') {
-      return requests.where((request) => request.status == 'Solicitado').toList();
+      return requests.where((request) => request.isWaiting).toList();
     }
     if (_filter == 'Em andamento') {
-      return requests.where((request) => request.status == 'Em negociação' || request.status == 'Agendado' || request.status == 'Em andamento').toList();
+      return requests
+          .where((request) =>
+              request.isAccepted || request.status == 'Em andamento')
+          .toList();
     }
-    if (_filter == 'Concluídas') {
+    if (_filter == 'Finalizadas') {
       return requests.where((request) => request.isCompleted).toList();
+    }
+    if (_filter == 'Recusadas') {
+      return requests.where((request) => request.isCanceled).toList();
     }
     return requests;
   }
@@ -57,7 +63,10 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: Text('Solicitações recebidas', style: Theme.of(context).textTheme.headlineSmall)),
+                Expanded(
+                  child: Text('Solicitações de serviços',
+                      style: Theme.of(context).textTheme.headlineSmall),
+                ),
                 IconButton.filledTonal(
                   onPressed: _reload,
                   icon: const Icon(Icons.refresh_rounded),
@@ -66,12 +75,21 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
               ],
             ),
             const SizedBox(height: 6),
-            Text('Aceite, recuse ou acompanhe pedidos enviados por clientes.', style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              'Aceite, recuse ou acompanhe pedidos enviados por clientes.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
             const SizedBox(height: 16),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ['Novas', 'Em andamento', 'Concluídas', 'Todas'].map((filter) {
+                children: [
+                  'Novas',
+                  'Em andamento',
+                  'Finalizadas',
+                  'Recusadas',
+                  'Todas'
+                ].map((filter) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -108,7 +126,8 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
                   return _EmptyProviderRequests(
                     icon: Icons.assignment_late_rounded,
                     title: 'Nenhum pedido nesta lista',
-                    message: 'Novas solicitações aparecerão aqui assim que clientes escolherem seu perfil.',
+                    message:
+                        'Novas solicitações aparecerão aqui quando clientes escolherem seu perfil aprovado e online.',
                     onAction: _reload,
                   );
                 }
@@ -165,13 +184,16 @@ class _ProviderRequestCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  CircleAvatar(child: Text(request.clientName.characters.first.toUpperCase())),
+                  CircleAvatar(
+                      child: Text(
+                          request.clientName.characters.first.toUpperCase())),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(request.service, style: Theme.of(context).textTheme.titleMedium),
+                        Text(request.service,
+                            style: Theme.of(context).textTheme.titleMedium),
                         Text(request.clientName),
                       ],
                     ),
@@ -182,16 +204,26 @@ class _ProviderRequestCard extends StatelessWidget {
               const SizedBox(height: 14),
               RequestStatusTimeline(status: request.status, compact: true),
               const SizedBox(height: 12),
+              _InfoLine(
+                icon: Icons.notes_rounded,
+                text: request.description,
+              ),
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  const Icon(Icons.place_rounded, size: 18, color: Color(0xFF667085)),
+                  const Icon(Icons.place_rounded,
+                      size: 18, color: Color(0xFF516070)),
                   const SizedBox(width: 6),
                   Expanded(child: Text(request.locationNeighborhood)),
-                  const Icon(Icons.event_rounded, size: 18, color: Color(0xFF667085)),
+                  const Icon(Icons.event_rounded,
+                      size: 18, color: Color(0xFF516070)),
                   const SizedBox(width: 4),
                   Text(_formatDate(request.desiredDate)),
                 ],
               ),
+              const SizedBox(height: 8),
+              Text('Criado em ${_formatDate(request.createdAt)}',
+                  style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),
@@ -201,6 +233,25 @@ class _ProviderRequestCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+}
+
+class _InfoLine extends StatelessWidget {
+  const _InfoLine({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
+        const SizedBox(width: 6),
+        Expanded(child: Text(text)),
+      ],
+    );
   }
 }
 
@@ -226,7 +277,9 @@ class _EmptyProviderRequests extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 18),

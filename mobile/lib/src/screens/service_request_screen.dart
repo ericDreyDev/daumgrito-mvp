@@ -34,7 +34,9 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedService = widget.provider.services.isNotEmpty ? widget.provider.services.first : null;
+    _selectedService = widget.provider.services.isNotEmpty
+        ? widget.provider.services.first
+        : null;
     _neighborhoodController.text = widget.provider.neighborhood;
     _desiredDate = widget.initialDesiredDate;
   }
@@ -75,7 +77,8 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
           onOpenChat: () {
             Navigator.of(context).pop();
             Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => ChatScreen(provider: widget.provider)),
+              MaterialPageRoute(
+                  builder: (_) => ChatScreen(provider: widget.provider)),
             );
           },
         ),
@@ -109,16 +112,20 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                       radius: 28,
                       backgroundColor: colors.primaryContainer,
                       foregroundColor: colors.onPrimaryContainer,
-                      child: Text(widget.provider.name.substring(0, 1).toUpperCase(), style: const TextStyle(fontWeight: FontWeight.w900)),
+                      child: Text(
+                          widget.provider.name.substring(0, 1).toUpperCase(),
+                          style: const TextStyle(fontWeight: FontWeight.w900)),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(widget.provider.name, style: Theme.of(context).textTheme.titleMedium),
+                          Text(widget.provider.name,
+                              style: Theme.of(context).textTheme.titleMedium),
                           const SizedBox(height: 3),
-                          Text(widget.provider.averagePrice ?? 'Valor a combinar'),
+                          Text(widget.provider.averagePrice ??
+                              'Valor a combinar'),
                         ],
                       ),
                     ),
@@ -133,34 +140,49 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('Conte o que você precisa', style: Theme.of(context).textTheme.titleMedium),
+                    Text('Conte o que você precisa',
+                        style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
-                      value: _selectedService,
-                      decoration: const InputDecoration(labelText: 'Serviço desejado', prefixIcon: Icon(Icons.home_repair_service_rounded)),
+                      initialValue: _selectedService,
+                      decoration: const InputDecoration(
+                          labelText: 'Serviço desejado',
+                          prefixIcon: Icon(Icons.home_repair_service_rounded)),
                       items: widget.provider.services.map((service) {
-                        return DropdownMenuItem(value: service, child: Text(service));
+                        return DropdownMenuItem(
+                            value: service, child: Text(service));
                       }).toList(),
-                      onChanged: (value) => setState(() => _selectedService = value),
-                      validator: (value) => value == null ? 'Escolha um serviço.' : null,
+                      onChanged: (value) =>
+                          setState(() => _selectedService = value),
+                      validator: (value) =>
+                          value == null ? 'Escolha um serviço.' : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _descriptionController,
                       decoration: const InputDecoration(
                         labelText: 'Descrição do problema',
-                        hintText: 'Ex.: vazamento na pia da cozinha, preciso de visita pela manhã',
+                        hintText:
+                            'Ex.: vazamento na pia da cozinha, preciso de visita pela manhã',
                         prefixIcon: Icon(Icons.notes_rounded),
                       ),
                       minLines: 4,
                       maxLines: 6,
-                      validator: (value) => value == null || value.trim().length < 10 ? 'Descreva com mais detalhes.' : null,
+                      validator: (value) =>
+                          value == null || value.trim().length < 10
+                              ? 'Descreva com mais detalhes.'
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     TextFormField(
                       controller: _neighborhoodController,
-                      decoration: const InputDecoration(labelText: 'Bairro/local de atendimento', prefixIcon: Icon(Icons.place_rounded)),
-                      validator: (value) => value == null || value.trim().length < 2 ? 'Informe o bairro.' : null,
+                      decoration: const InputDecoration(
+                          labelText: 'Bairro/local de atendimento',
+                          prefixIcon: Icon(Icons.place_rounded)),
+                      validator: (value) =>
+                          value == null || value.trim().length < 2
+                              ? 'Informe o bairro.'
+                              : null,
                     ),
                     const SizedBox(height: 12),
                     OutlinedButton.icon(
@@ -168,23 +190,30 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                         final date = await showDatePicker(
                           context: context,
                           firstDate: DateTime.now(),
-                          lastDate: DateTime.now().add(const Duration(days: 120)),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 120)),
                           initialDate: _desiredDate ?? DateTime.now(),
                         );
                         if (date != null) setState(() => _desiredDate = date);
                       },
                       icon: const Icon(Icons.calendar_month_rounded),
-                      label: Text(_desiredDate == null ? 'Escolher data desejada' : 'Data: ${_formatDate(_desiredDate!)}'),
+                      label: Text(_desiredDate == null
+                          ? 'Escolher data desejada'
+                          : 'Data: ${_formatDate(_desiredDate!)}'),
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 12),
-                      Text(_error!, style: TextStyle(color: colors.error, fontWeight: FontWeight.w700)),
+                      Text(_error!,
+                          style: TextStyle(
+                              color: colors.error,
+                              fontWeight: FontWeight.w700)),
                     ],
                     const SizedBox(height: 18),
                     FilledButton.icon(
                       onPressed: _isSaving ? null : _submit,
                       icon: const Icon(Icons.send_rounded),
-                      label: Text(_isSaving ? 'Enviando...' : 'Enviar solicitação'),
+                      label: Text(
+                          _isSaving ? 'Enviando...' : 'Enviar solicitação'),
                     ),
                   ],
                 ),
@@ -218,7 +247,8 @@ class _SuccessSheet extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Icon(Icons.check_circle_rounded, size: 54, color: Color(0xFF0E9F6E)),
+          const Icon(Icons.check_circle_rounded,
+              size: 54, color: Color(0xFF0757B8)),
           const SizedBox(height: 12),
           Text(
             'Solicitação enviada',
@@ -227,7 +257,7 @@ class _SuccessSheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            '${provider.name} recebeu seu pedido com status Solicitado. Você já pode iniciar uma conversa demonstrativa.',
+            '${provider.name} recebeu seu pedido com status Aguardando aceite. Você já pode iniciar uma conversa demonstrativa.',
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 18),

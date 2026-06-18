@@ -11,11 +11,10 @@ class RequestStatusTimeline extends StatelessWidget {
   final bool compact;
 
   static const _statuses = [
-    'Solicitado',
-    'Em negociação',
-    'Agendado',
+    'Aguardando aceite',
+    'Aceito',
     'Em andamento',
-    'Concluído',
+    'Finalizado',
   ];
 
   @override
@@ -35,16 +34,23 @@ class RequestStatusTimeline extends StatelessWidget {
                     height: compact ? 18 : 26,
                     width: compact ? 18 : 26,
                     decoration: BoxDecoration(
-                      color: done ? Theme.of(context).colorScheme.primary : const Color(0xFFE5EAF1),
+                      color: done
+                          ? Theme.of(context).colorScheme.primary
+                          : const Color(0xFFE5EAF1),
                       shape: BoxShape.circle,
                     ),
-                    child: done ? Icon(Icons.check_rounded, size: compact ? 13 : 17, color: Colors.white) : null,
+                    child: done
+                        ? Icon(Icons.check_rounded,
+                            size: compact ? 13 : 17, color: Colors.white)
+                        : null,
                   ),
                   if (index < _statuses.length - 1)
                     Expanded(
                       child: Container(
                         height: 3,
-                        color: index < currentIndex ? Theme.of(context).colorScheme.primary : const Color(0xFFE5EAF1),
+                        color: index < currentIndex
+                            ? Theme.of(context).colorScheme.primary
+                            : const Color(0xFFE5EAF1),
                       ),
                     ),
                 ],
@@ -60,7 +66,8 @@ class RequestStatusTimeline extends StatelessWidget {
                 child: Text(
                   item,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
+                  style: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w700),
                 ),
               );
             }).toList(),
@@ -71,18 +78,24 @@ class RequestStatusTimeline extends StatelessWidget {
   }
 
   int _normalizedIndex(String value) {
-    if (value == 'Cancelado') return 0;
-    final index = _statuses.indexWhere((item) => _normalize(item) == _normalize(value));
+    final normalized = _normalize(value);
+    if (normalized == 'cancelado' || normalized == 'recusado') return 0;
+    if (normalized == 'solicitado') return 0;
+    if (normalized == 'agendado') return 1;
+    if (normalized == 'concluido') return 3;
+    final index =
+        _statuses.indexWhere((item) => _normalize(item) == normalized);
     return index < 0 ? 0 : index;
   }
 
   String _normalize(String value) {
     return value
-        .replaceAll('Ã§', 'ç')
-        .replaceAll('Ã­', 'í')
-        .replaceAll('Ã£', 'ã')
-        .replaceAll('Ã¡', 'á')
-        .replaceAll('Ã³', 'ó')
-        .replaceAll('Ãº', 'ú');
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('ã', 'a')
+        .replaceAll('ç', 'c')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u');
   }
 }

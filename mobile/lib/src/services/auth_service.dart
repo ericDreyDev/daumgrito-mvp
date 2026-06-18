@@ -32,7 +32,8 @@ class AuthService {
   }
 
   Future<AuthResult> register(Map<String, dynamic> payload) async {
-    final data = await _apiClient.post('/auth/register', payload) as Map<String, dynamic>;
+    final data = await _apiClient.post('/auth/register', payload)
+        as Map<String, dynamic>;
     final token = data['token'] as String;
     _apiClient.setToken(token);
 

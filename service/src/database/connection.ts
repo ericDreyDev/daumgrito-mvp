@@ -33,6 +33,16 @@ export async function initializeDatabase() {
       photo_url TEXT,
       services JSONB NOT NULL DEFAULT '[]'::jsonb,
       professional_description TEXT,
+      experience TEXT,
+      documents JSONB NOT NULL DEFAULT '[]'::jsonb,
+      selfie_url TEXT,
+      validation_status TEXT NOT NULL DEFAULT 'Pendente' CHECK (validation_status IN ('Pendente', 'Aprovado', 'Reprovado')),
+      base_address TEXT,
+      service_city TEXT,
+      service_neighborhood TEXT,
+      service_radius_km INTEGER NOT NULL DEFAULT 10,
+      use_current_location BOOLEAN NOT NULL DEFAULT FALSE,
+      is_online BOOLEAN NOT NULL DEFAULT FALSE,
       availability TEXT,
       average_price TEXT,
       average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0
@@ -46,7 +56,7 @@ export async function initializeDatabase() {
       description TEXT NOT NULL,
       desired_date DATE NOT NULL,
       location_neighborhood TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'Solicitado',
+      status TEXT NOT NULL DEFAULT 'Aguardando aceite',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -78,7 +88,19 @@ export async function initializeDatabase() {
     );
   `);
 
-  await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT ''");
+  await db.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT '';
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS experience TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS documents JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS selfie_url TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS validation_status TEXT NOT NULL DEFAULT 'Pendente';
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS base_address TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_city TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_neighborhood TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_radius_km INTEGER NOT NULL DEFAULT 10;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS use_current_location BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS is_online BOOLEAN NOT NULL DEFAULT FALSE;
+  `);
 
   await seedServiceCategories();
   await seedDemoClients();
@@ -116,17 +138,43 @@ async function seedDemoProviders() {
 
     await db.query(
       `INSERT INTO provider_profiles
-       (id, user_id, services, professional_description, availability, average_price, average_rating)
-       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
+       (id, user_id, services, professional_description, experience, availability, average_price, average_rating,
+        validation_status, base_address, service_city, service_neighborhood, service_radius_km, is_online)
+       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, 'Aprovado', $9, $10, $11, $12, true)
        ON CONFLICT (id) DO NOTHING`,
       [
         provider.profileId,
         provider.userId,
         JSON.stringify(provider.services),
         provider.professionalDescription,
+        provider.experience,
         provider.availability,
         provider.averagePrice,
-        provider.averageRating
+        provider.averageRating,
+        provider.baseAddress,
+        provider.city,
+        provider.neighborhood,
+        provider.serviceRadiusKm
+      ]
+    );
+
+    await db.query(
+      `UPDATE provider_profiles
+       SET experience = COALESCE(experience, $1),
+           validation_status = 'Aprovado',
+           base_address = COALESCE(base_address, $2),
+           service_city = COALESCE(service_city, $3),
+           service_neighborhood = COALESCE(service_neighborhood, $4),
+           service_radius_km = CASE WHEN service_radius_km = 10 THEN $5 ELSE service_radius_km END,
+           is_online = true
+       WHERE id = $6`,
+      [
+        provider.experience,
+        provider.baseAddress,
+        provider.city,
+        provider.neighborhood,
+        provider.serviceRadiusKm,
+        provider.profileId
       ]
     );
   }

@@ -17,10 +17,12 @@ class ProviderRequestDetailScreen extends StatefulWidget {
   final ServiceRequest initialRequest;
 
   @override
-  State<ProviderRequestDetailScreen> createState() => _ProviderRequestDetailScreenState();
+  State<ProviderRequestDetailScreen> createState() =>
+      _ProviderRequestDetailScreenState();
 }
 
-class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScreen> {
+class _ProviderRequestDetailScreenState
+    extends State<ProviderRequestDetailScreen> {
   late final ServiceRequestService _service;
   late ServiceRequest _request;
   bool _isUpdating = false;
@@ -46,7 +48,7 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Pedido recebido')),
+      appBar: AppBar(title: const Text('Detalhes da solicitação')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
@@ -58,17 +60,22 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(radius: 28, child: Text(_request.clientName.characters.first.toUpperCase())),
+                      CircleAvatar(
+                          radius: 28,
+                          child: Text(_request.clientName.characters.first
+                              .toUpperCase())),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_request.clientName, style: Theme.of(context).textTheme.titleLarge),
+                            Text(_request.clientName,
+                                style: Theme.of(context).textTheme.titleLarge),
                             Text(_request.service),
                           ],
                         ),
                       ),
+                      _StatusPill(status: _request.status),
                     ],
                   ),
                   const SizedBox(height: 18),
@@ -79,75 +86,100 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Detalhes do cliente',
+            title: 'Cliente',
             children: [
-              _InfoLine(icon: Icons.phone_rounded, label: 'Telefone', value: _request.clientPhone.isEmpty ? 'Não informado' : _request.clientPhone),
-              _InfoLine(icon: Icons.location_city_rounded, label: 'Cidade', value: _request.clientCity),
-              _InfoLine(icon: Icons.place_rounded, label: 'Bairro', value: _request.locationNeighborhood),
+              _InfoLine(
+                  icon: Icons.phone_rounded,
+                  label: 'Telefone',
+                  value: _request.clientPhone.isEmpty
+                      ? 'Não informado'
+                      : _request.clientPhone),
+              _InfoLine(
+                  icon: Icons.location_city_rounded,
+                  label: 'Cidade',
+                  value: _request.clientCity),
+              _InfoLine(
+                  icon: Icons.place_rounded,
+                  label: 'Endereço/região',
+                  value: _request.locationNeighborhood),
             ],
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Solicitação',
+            title: 'Serviço solicitado',
             children: [
-              _InfoLine(icon: Icons.notes_rounded, label: 'Descrição', value: _request.description),
-              _InfoLine(icon: Icons.event_rounded, label: 'Data desejada', value: _formatDate(_request.desiredDate)),
-              _InfoLine(icon: Icons.flag_rounded, label: 'Status', value: _request.status),
+              _InfoLine(
+                  icon: Icons.category_rounded,
+                  label: 'Categoria',
+                  value: _request.service),
+              _InfoLine(
+                  icon: Icons.notes_rounded,
+                  label: 'Descrição',
+                  value: _request.description),
+              _InfoLine(
+                  icon: Icons.event_rounded,
+                  label: 'Data e hora solicitada',
+                  value: _formatDateTime(_request.desiredDate)),
+              _InfoLine(
+                  icon: Icons.add_task_rounded,
+                  label: 'Criada em',
+                  value: _formatDateTime(_request.createdAt)),
             ],
           ),
           const SizedBox(height: 16),
           OutlinedButton.icon(
             onPressed: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => ChatScreen(provider: _request.provider)),
+                MaterialPageRoute(
+                    builder: (_) => ChatScreen(provider: _request.provider)),
               );
             },
             icon: const Icon(Icons.chat_bubble_outline_rounded),
-            label: const Text('Responder chat demonstrativo'),
+            label: const Text('Ver conversa'),
           ),
           const SizedBox(height: 10),
-          if (_request.status == 'Solicitado') ...[
+          if (_request.isWaiting)
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isUpdating ? null : () => _updateStatus('Cancelado'),
+                    onPressed:
+                        _isUpdating ? null : () => _updateStatus('Recusado'),
                     icon: const Icon(Icons.close_rounded),
-                    label: const Text('Recusar'),
+                    label: const Text('Recusar serviço'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _isUpdating ? null : () => _updateStatus('Agendado'),
+                    onPressed:
+                        _isUpdating ? null : () => _updateStatus('Aceito'),
                     icon: const Icon(Icons.check_rounded),
-                    label: const Text('Aceitar'),
+                    label: const Text('Aceitar serviço'),
                   ),
                 ),
               ],
             ),
-          ],
-          if (_request.status == 'Agendado') ...[
+          if (_request.isAccepted)
             FilledButton.icon(
-              onPressed: _isUpdating ? null : () => _updateStatus('Em andamento'),
+              onPressed:
+                  _isUpdating ? null : () => _updateStatus('Em andamento'),
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Iniciar atendimento'),
             ),
-          ],
-          if (_request.status == 'Em andamento') ...[
+          if (_request.status == 'Em andamento')
             FilledButton.icon(
-              onPressed: _isUpdating ? null : () => _updateStatus('Concluído'),
+              onPressed: _isUpdating ? null : () => _updateStatus('Finalizado'),
               icon: const Icon(Icons.verified_rounded),
-              label: const Text('Concluir atendimento'),
+              label: const Text('Finalizar atendimento'),
             ),
-          ],
         ],
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  String _formatDateTime(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year} ${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
   }
 }
 
@@ -176,7 +208,11 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _InfoLine extends StatelessWidget {
-  const _InfoLine({required this.icon, required this.label, required this.value});
+  const _InfoLine({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -196,12 +232,32 @@ class _InfoLine extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(value,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
               ],
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(status,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
     );
   }
 }

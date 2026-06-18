@@ -24,13 +24,17 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(16, 18, 16, 28),
         children: [
-          Text('Agenda e disponibilidade', style: Theme.of(context).textTheme.headlineSmall),
+          Text('Agenda e disponibilidade',
+              style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
-          Text('Defina quando você costuma atender. Nesta etapa, a agenda é demonstrativa e ajuda a compor seu perfil.', style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+              'Defina quando você costuma atender. Nesta etapa, a agenda é demonstrativa e ajuda a compor seu perfil.',
+              style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
           _ScheduleCard(
             title: 'Dias de atendimento',
-            children: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day) {
+            children:
+                ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'].map((day) {
               return FilterChip(
                 selected: _selectedDays.contains(day),
                 label: Text(day),
@@ -68,14 +72,17 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Resumo público', style: Theme.of(context).textTheme.titleMedium),
+                  Text('Resumo público',
+                      style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(_summary),
                   const SizedBox(height: 16),
                   FilledButton.icon(
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Agenda demonstrativa salva localmente.')),
+                        const SnackBar(
+                            content:
+                                Text('Agenda demonstrativa salva localmente.')),
                       );
                     },
                     icon: const Icon(Icons.save_rounded),
@@ -91,8 +98,11 @@ class _ProviderScheduleScreenState extends State<ProviderScheduleScreen> {
   }
 
   String get _summary {
-    final days = _selectedDays.isEmpty ? 'dias a combinar' : _selectedDays.join(', ');
-    final periods = _selectedPeriods.isEmpty ? 'horários a combinar' : _selectedPeriods.join(', ');
+    final days =
+        _selectedDays.isEmpty ? 'dias a combinar' : _selectedDays.join(', ');
+    final periods = _selectedPeriods.isEmpty
+        ? 'horários a combinar'
+        : _selectedPeriods.join(', ');
     return 'Atende em $days, nos períodos: $periods.';
   }
 }

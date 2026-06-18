@@ -53,14 +53,19 @@ class _ChatScreenState extends State<ChatScreen> {
       appBar: AppBar(
         title: Row(
           children: [
-            CircleAvatar(child: Text(widget.provider.name.substring(0, 1).toUpperCase())),
+            CircleAvatar(
+                child:
+                    Text(widget.provider.name.substring(0, 1).toUpperCase())),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(widget.provider.name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900)),
-                  const Text('Chat demonstrativo', style: TextStyle(fontSize: 12)),
+                  Text(widget.provider.name,
+                      style: const TextStyle(
+                          fontSize: 16, fontWeight: FontWeight.w900)),
+                  const Text('Chat demonstrativo',
+                      style: TextStyle(fontSize: 12)),
                 ],
               ),
             ),
@@ -126,7 +131,8 @@ class _MessageBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
     final background = message.isMine ? colors.primary : Colors.white;
-    final foreground = message.isMine ? colors.onPrimary : const Color(0xFF182230);
+    final foreground =
+        message.isMine ? colors.onPrimary : const Color(0xFF10233F);
 
     return Align(
       alignment: message.isMine ? Alignment.centerRight : Alignment.centerLeft,
@@ -142,16 +148,25 @@ class _MessageBubble extends StatelessWidget {
             bottomLeft: Radius.circular(message.isMine ? 16 : 4),
             bottomRight: Radius.circular(message.isMine ? 4 : 16),
           ),
-          border: message.isMine ? null : Border.all(color: const Color(0xFFE5EAF1)),
+          border: message.isMine
+              ? null
+              : Border.all(color: const Color(0xFFE5EAF1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(message.senderName, style: TextStyle(color: foreground.withOpacity(0.78), fontSize: 12, fontWeight: FontWeight.w800)),
+            Text(message.senderName,
+                style: TextStyle(
+                    color: foreground.withValues(alpha: 0.78),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800)),
             const SizedBox(height: 4),
-            Text(message.text, style: TextStyle(color: foreground, fontSize: 15)),
+            Text(message.text,
+                style: TextStyle(color: foreground, fontSize: 15)),
             const SizedBox(height: 5),
-            Text(_formatTime(message.sentAt), style: TextStyle(color: foreground.withOpacity(0.7), fontSize: 11)),
+            Text(_formatTime(message.sentAt),
+                style: TextStyle(
+                    color: foreground.withValues(alpha: 0.7), fontSize: 11)),
           ],
         ),
       ),

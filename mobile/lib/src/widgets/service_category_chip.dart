@@ -27,7 +27,8 @@ class ServiceCategoryChip extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected ? colors.primary : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isSelected ? colors.primary : const Color(0xFFE0E7EF)),
+          border: Border.all(
+              color: isSelected ? colors.primary : const Color(0xFFE0E7EF)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,

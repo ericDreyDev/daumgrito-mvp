@@ -30,7 +30,8 @@ class User {
       document: json['document'] as String? ?? '',
       city: json['city'] as String,
       neighborhood: json['neighborhood'] as String,
-      userType: json['userType'] == 'provider' ? UserType.provider : UserType.client,
+      userType:
+          json['userType'] == 'provider' ? UserType.provider : UserType.client,
     );
   }
 }

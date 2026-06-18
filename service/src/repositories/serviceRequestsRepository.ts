@@ -1,8 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { db } from "../database/connection.js";
 import type { RequestStatus } from "../models/types.js";
+import { findProviderById } from "./providersRepository.js";
 
 export async function createServiceRequest(clientId: string, input: any) {
+  const provider = await findProviderById(input.providerId);
+  if (!provider || provider.validationStatus !== "Aprovado" || !provider.isOnline) return undefined;
+
   const id = randomUUID();
   await db.query(
     `INSERT INTO service_requests
@@ -46,6 +50,14 @@ function serviceRequestSelect() {
       pp.photo_url AS provider_photo_url,
       pp.services AS provider_services,
       pp.professional_description AS provider_professional_description,
+      pp.experience AS provider_experience,
+      pp.validation_status AS provider_validation_status,
+      pp.base_address AS provider_base_address,
+      pp.service_city AS provider_service_city,
+      pp.service_neighborhood AS provider_service_neighborhood,
+      pp.service_radius_km AS provider_service_radius_km,
+      pp.use_current_location AS provider_use_current_location,
+      pp.is_online AS provider_is_online,
       pp.availability AS provider_availability,
       pp.average_price AS provider_average_price,
       pp.average_rating AS provider_average_rating,

@@ -18,7 +18,7 @@ const createSchema = z.object({
 });
 
 const statusSchema = z.object({
-  status: z.enum(["Solicitado", "Em negociação", "Agendado", "Em andamento", "Concluído", "Cancelado"])
+  status: z.enum(["Aguardando aceite", "Aceito", "Recusado", "Em andamento", "Finalizado", "Cancelado"])
 });
 
 export async function postServiceRequest(req: Request, res: Response) {
@@ -27,7 +27,11 @@ export async function postServiceRequest(req: Request, res: Response) {
   }
 
   const input = createSchema.parse(req.body);
-  return res.status(201).json(await createServiceRequest(req.user!.id, input));
+  const serviceRequest = await createServiceRequest(req.user!.id, input);
+  if (!serviceRequest) {
+    throw new AppError(422, "Este prestador ainda não está aprovado e online para receber solicitações.");
+  }
+  return res.status(201).json(serviceRequest);
 }
 
 export async function getServiceRequests(req: Request, res: Response) {
@@ -37,12 +41,30 @@ export async function getServiceRequests(req: Request, res: Response) {
 export async function getServiceRequest(req: Request, res: Response) {
   const serviceRequest = await findServiceRequestById(routeParam(req.params.id, "id"));
   if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
+  if (!canAccessServiceRequest(req, serviceRequest)) {
+    throw new AppError(403, "Você não tem permissão para acessar esta solicitação.");
+  }
   return res.json(serviceRequest);
 }
 
 export async function putServiceRequestStatus(req: Request, res: Response) {
+  if (req.user!.userType !== "provider") {
+    throw new AppError(403, "Apenas prestadores podem alterar o status da solicitação.");
+  }
+
   const { status } = statusSchema.parse(req.body);
-  const serviceRequest = await updateServiceRequestStatus(routeParam(req.params.id, "id"), status);
-  if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
-  return res.json(serviceRequest);
+  const id = routeParam(req.params.id, "id");
+  const current = await findServiceRequestById(id);
+  if (!current) throw new AppError(404, "Solicitação não encontrada.");
+  if (current.provider_user_id !== req.user!.id) {
+    throw new AppError(403, "Apenas o prestador responsável pode alterar esta solicitação.");
+  }
+
+  return res.json(await updateServiceRequestStatus(id, status));
+}
+
+function canAccessServiceRequest(req: Request, serviceRequest: any) {
+  if (req.user!.userType === "client") return serviceRequest.client_id === req.user!.id;
+  if (req.user!.userType === "provider") return serviceRequest.provider_user_id === req.user!.id;
+  return false;
 }

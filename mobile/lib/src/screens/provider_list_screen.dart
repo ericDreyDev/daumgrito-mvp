@@ -142,20 +142,24 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
               bestRating: _bestRating,
               onDateTap: _pickDate,
               onRatingChanged: (value) => setState(() => _minRating = value),
-              onPriceChanged: (value) => setState(() => _maxAveragePrice = value),
-              onBestRatingChanged: (value) => setState(() => _bestRating = value),
+              onPriceChanged: (value) =>
+                  setState(() => _maxAveragePrice = value),
+              onBestRatingChanged: (value) =>
+                  setState(() => _bestRating = value),
               onSearch: _search,
               onClear: _clearFilters,
             ),
             const SizedBox(height: 18),
-            Text('Escolha uma categoria', style: Theme.of(context).textTheme.titleMedium),
+            Text('Escolha uma categoria',
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 10),
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
                   ServiceCategoryChip(
-                    category: const ServiceCategory(name: 'Todos', icon: Icons.apps_rounded),
+                    category: const ServiceCategory(
+                        name: 'Todos', icon: Icons.apps_rounded),
                     isSelected: _selectedService == null,
                     onTap: () {
                       setState(() => _selectedService = null);
@@ -194,7 +198,8 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
                   return _EmptyState(
                     icon: Icons.cloud_off_rounded,
                     title: 'Não conseguimos carregar agora',
-                    description: 'Verifique se a API está rodando e tente novamente.',
+                    description:
+                        'Verifique se a API está rodando e tente novamente.',
                     actionLabel: 'Tentar de novo',
                     onAction: _search,
                   );
@@ -205,7 +210,8 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
                   return _EmptyState(
                     icon: Icons.search_off_rounded,
                     title: 'Nenhum profissional encontrado',
-                    description: 'Ajuste preço, nota, cidade ou categoria para ampliar as opções.',
+                    description:
+                        'Ajuste preço, nota, cidade ou categoria para ampliar as opções.',
                     actionLabel: 'Limpar filtros',
                     onAction: _clearFilters,
                   );
@@ -224,7 +230,8 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
                         ),
                         TextButton.icon(
                           onPressed: _clearFilters,
-                          icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                          icon: const Icon(Icons.filter_alt_off_rounded,
+                              size: 18),
                           label: const Text('Limpar'),
                         ),
                       ],
@@ -270,7 +277,7 @@ class _HeroPanel extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF12343B),
+        color: const Color(0xFF0757B8),
         borderRadius: BorderRadius.circular(22),
       ),
       child: Column(
@@ -278,7 +285,8 @@ class _HeroPanel extends StatelessWidget {
         children: [
           Text(
             'Olá, ${_firstName(userName)}',
-            style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
+            style: const TextStyle(
+                color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
           const Text(
@@ -318,7 +326,7 @@ class _HeroHint extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.10),
+          color: Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Row(
@@ -330,7 +338,10 @@ class _HeroHint extends StatelessWidget {
               child: Text(
                 label,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12),
               ),
             ),
           ],
@@ -383,13 +394,16 @@ class _SearchPanel extends StatelessWidget {
               children: [
                 const Icon(Icons.tune_rounded),
                 const SizedBox(width: 8),
-                Text('Defina sua busca', style: Theme.of(context).textTheme.titleMedium),
+                Text('Defina sua busca',
+                    style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
             const SizedBox(height: 14),
             TextField(
               controller: nameController,
-              decoration: const InputDecoration(prefixIcon: Icon(Icons.person_search_rounded), labelText: 'Nome do profissional'),
+              decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.person_search_rounded),
+                  labelText: 'Nome do profissional'),
             ),
             const SizedBox(height: 10),
             Row(
@@ -397,14 +411,18 @@ class _SearchPanel extends StatelessWidget {
                 Expanded(
                   child: TextField(
                     controller: cityController,
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.location_city_rounded), labelText: 'Cidade'),
+                    decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.location_city_rounded),
+                        labelText: 'Cidade'),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: TextField(
                     controller: neighborhoodController,
-                    decoration: const InputDecoration(prefixIcon: Icon(Icons.place_rounded), labelText: 'Bairro'),
+                    decoration: const InputDecoration(
+                        prefixIcon: Icon(Icons.place_rounded),
+                        labelText: 'Bairro'),
                   ),
                 ),
               ],
@@ -414,12 +432,17 @@ class _SearchPanel extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               onTap: onDateTap,
               child: InputDecorator(
-                decoration: const InputDecoration(prefixIcon: Icon(Icons.event_rounded), labelText: 'Data desejada'),
-                child: Text(selectedDate == null ? 'Escolher data' : _formatDate(selectedDate!)),
+                decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.event_rounded),
+                    labelText: 'Data desejada'),
+                child: Text(selectedDate == null
+                    ? 'Escolher data'
+                    : _formatDate(selectedDate!)),
               ),
             ),
             const SizedBox(height: 14),
-            Text('Nota mínima: ${minRating == 0 ? 'qualquer' : minRating.toStringAsFixed(1)}'),
+            Text(
+                'Nota mínima: ${minRating == 0 ? 'qualquer' : minRating.toStringAsFixed(1)}'),
             Slider(
               value: minRating,
               min: 0,
@@ -435,10 +458,26 @@ class _SearchPanel extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                _PriceChoice(label: 'Qualquer', value: null, selectedValue: maxAveragePrice, onSelected: onPriceChanged),
-                _PriceChoice(label: 'R\$ 100', value: 100, selectedValue: maxAveragePrice, onSelected: onPriceChanged),
-                _PriceChoice(label: 'R\$ 150', value: 150, selectedValue: maxAveragePrice, onSelected: onPriceChanged),
-                _PriceChoice(label: 'R\$ 250', value: 250, selectedValue: maxAveragePrice, onSelected: onPriceChanged),
+                _PriceChoice(
+                    label: 'Qualquer',
+                    value: null,
+                    selectedValue: maxAveragePrice,
+                    onSelected: onPriceChanged),
+                _PriceChoice(
+                    label: 'R\$ 100',
+                    value: 100,
+                    selectedValue: maxAveragePrice,
+                    onSelected: onPriceChanged),
+                _PriceChoice(
+                    label: 'R\$ 150',
+                    value: 150,
+                    selectedValue: maxAveragePrice,
+                    onSelected: onPriceChanged),
+                _PriceChoice(
+                    label: 'R\$ 250',
+                    value: 250,
+                    selectedValue: maxAveragePrice,
+                    onSelected: onPriceChanged),
               ],
             ),
             SwitchListTile.adaptive(
@@ -449,7 +488,9 @@ class _SearchPanel extends StatelessWidget {
             ),
             Row(
               children: [
-                Expanded(child: OutlinedButton(onPressed: onClear, child: const Text('Limpar'))),
+                Expanded(
+                    child: OutlinedButton(
+                        onPressed: onClear, child: const Text('Limpar'))),
                 const SizedBox(width: 10),
                 Expanded(
                   flex: 2,
@@ -521,7 +562,9 @@ class _EmptyState extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(description, textAlign: TextAlign.center),
             const SizedBox(height: 18),

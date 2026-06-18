@@ -4,6 +4,7 @@ import { getChatMessages, postChatMessage } from "../controllers/chatController.
 import { getPayment, postPayment } from "../controllers/paymentsController.js";
 import {
   getMyProviderProfile,
+  patchProviderAvailability,
   getProvider,
   getProviderReviews,
   getProviders,
@@ -32,6 +33,7 @@ routes.get("/providers", asyncHandler(getProviders));
 routes.get("/providers/me", requireAuth, asyncHandler(getMyProviderProfile));
 routes.get("/providers/:id", asyncHandler(getProvider));
 routes.put("/providers/profile", requireAuth, asyncHandler(putProviderProfile));
+routes.patch("/providers/availability", requireAuth, asyncHandler(patchProviderAvailability));
 
 routes.post("/service-requests", requireAuth, asyncHandler(postServiceRequest));
 routes.get("/service-requests", requireAuth, asyncHandler(getServiceRequests));

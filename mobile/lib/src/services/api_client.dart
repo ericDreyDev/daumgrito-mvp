@@ -40,6 +40,15 @@ class ApiClient {
     return _decode(response);
   }
 
+  Future<dynamic> patch(String path, Map<String, dynamic> body) async {
+    final response = await _httpClient.patch(
+      Uri.parse('$baseUrl$path'),
+      headers: _headers(),
+      body: jsonEncode(body),
+    );
+    return _decode(response);
+  }
+
   Map<String, String> _headers() {
     return {
       'Content-Type': 'application/json',
@@ -51,7 +60,8 @@ class ApiClient {
     final data = response.body.isEmpty ? null : jsonDecode(response.body);
     if (response.statusCode < 200 || response.statusCode >= 300) {
       final message = data is Map<String, dynamic> ? data['message'] : null;
-      throw ApiException(message?.toString() ?? 'Erro na comunicação com a API.');
+      throw ApiException(
+          message?.toString() ?? 'Erro na comunicação com a API.');
     }
     return data;
   }

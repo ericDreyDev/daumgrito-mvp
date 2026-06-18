@@ -21,7 +21,10 @@ class ReviewService {
   }
 
   Future<List<Review>> listProviderReviews(String providerId) async {
-    final data = await _apiClient.get('/providers/$providerId/reviews') as List<dynamic>;
-    return data.map((item) => Review.fromJson(item as Map<String, dynamic>)).toList();
+    final data =
+        await _apiClient.get('/providers/$providerId/reviews') as List<dynamic>;
+    return data
+        .map((item) => Review.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 }
