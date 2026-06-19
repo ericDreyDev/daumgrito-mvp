@@ -43,7 +43,9 @@ class _ProviderHistoryScreenState extends State<ProviderHistoryScreen> {
   }
 
   void _reload() {
-    setState(() => _futureData = _loadData());
+    setState(() {
+      _futureData = _loadData();
+    });
   }
 
   List<ServiceRequest> _applyFilters(_HistoryData data) {

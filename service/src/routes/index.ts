@@ -1,4 +1,12 @@
 import { Router } from "express";
+import {
+  getAdminUsers,
+  getPendingProviderApprovals,
+  getProviderApprovalHistory,
+  patchProviderApproval,
+  patchUserAccess,
+  postUserPasswordReset
+} from "../controllers/adminController.js";
 import { login, register } from "../controllers/authController.js";
 import { getChatMessages, postChatMessage } from "../controllers/chatController.js";
 import { getPayment, postPayment } from "../controllers/paymentsController.js";
@@ -18,7 +26,7 @@ import {
   putServiceRequestStatus
 } from "../controllers/serviceRequestsController.js";
 import { getMe, putMe } from "../controllers/usersController.js";
-import { requireAuth } from "../middlewares/auth.js";
+import { requireAdmin, requireAuth } from "../middlewares/auth.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
 export const routes = Router();
@@ -28,6 +36,13 @@ routes.post("/auth/login", asyncHandler(login));
 
 routes.get("/users/me", requireAuth, getMe);
 routes.put("/users/me", requireAuth, asyncHandler(putMe));
+
+routes.get("/admin/providers/pending", requireAuth, requireAdmin, asyncHandler(getPendingProviderApprovals));
+routes.patch("/admin/providers/:providerId/approval", requireAuth, requireAdmin, asyncHandler(patchProviderApproval));
+routes.get("/admin/providers/approval-history", requireAuth, requireAdmin, asyncHandler(getProviderApprovalHistory));
+routes.get("/admin/users", requireAuth, requireAdmin, asyncHandler(getAdminUsers));
+routes.patch("/admin/users/:userId/access", requireAuth, requireAdmin, asyncHandler(patchUserAccess));
+routes.post("/admin/users/:userId/reset-password", requireAuth, requireAdmin, asyncHandler(postUserPasswordReset));
 
 routes.get("/providers", asyncHandler(getProviders));
 routes.get("/providers/me", requireAuth, asyncHandler(getMyProviderProfile));

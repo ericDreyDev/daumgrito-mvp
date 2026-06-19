@@ -5,16 +5,18 @@ import '../models/user.dart';
 import '../services/api_client.dart';
 import '../services/auth_service.dart';
 import '../widgets/app_logo.dart';
-import 'client_home_screen.dart';
-import 'provider_home_screen.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({
+    required this.apiClient,
+    required this.onAuthenticated,
     this.isDarkMode = false,
     this.onThemeModeChanged,
     super.key,
   });
 
+  final ApiClient apiClient;
+  final void Function(User user, String token) onAuthenticated;
   final bool isDarkMode;
   final ValueChanged<bool>? onThemeModeChanged;
 
@@ -23,7 +25,6 @@ class AuthScreen extends StatefulWidget {
 }
 
 class _AuthScreenState extends State<AuthScreen> {
-  final _apiClient = ApiClient();
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController(text: 'cliente@demo.local');
@@ -72,7 +73,7 @@ class _AuthScreenState extends State<AuthScreen> {
     });
 
     try {
-      final authService = AuthService(_apiClient);
+      final authService = AuthService(widget.apiClient);
       final result = _isLogin
           ? await authService.login(
               email: _emailController.text.trim(),
@@ -90,7 +91,7 @@ class _AuthScreenState extends State<AuthScreen> {
             });
 
       if (!_isLogin && result.user.userType == UserType.provider) {
-        await _apiClient.put('/providers/profile', {
+        await widget.apiClient.put('/providers/profile', {
           'name': _nameController.text.trim(),
           'phone': _phoneController.text.trim(),
           'document': _documentController.text.trim(),
@@ -115,22 +116,7 @@ class _AuthScreenState extends State<AuthScreen> {
       }
 
       if (!mounted) return;
-      final nextScreen = result.user.userType == UserType.provider
-          ? ProviderHomeScreen(
-              apiClient: _apiClient,
-              user: result.user,
-              isDarkMode: widget.isDarkMode,
-              onThemeModeChanged: widget.onThemeModeChanged,
-            )
-          : ClientHomeScreen(
-              apiClient: _apiClient,
-              user: result.user,
-              isDarkMode: widget.isDarkMode,
-              onThemeModeChanged: widget.onThemeModeChanged,
-            );
-
-      Navigator.of(context)
-          .pushReplacement(MaterialPageRoute(builder: (_) => nextScreen));
+      widget.onAuthenticated(result.user, result.token);
     } on ApiException catch (error) {
       setState(() {
         _error = error.message.contains('e-mail')
@@ -261,9 +247,10 @@ class _AuthScreenState extends State<AuthScreen> {
         TextFormField(
           controller: _emailController,
           decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.mail_rounded), labelText: 'E-mail'),
+              prefixIcon: Icon(Icons.mail_rounded),
+              labelText: 'E-mail ou usuario'),
           keyboardType: TextInputType.emailAddress,
-          validator: _emailValidator,
+          validator: _loginIdentifierValidator,
         ),
         const SizedBox(height: 12),
         TextFormField(
@@ -274,7 +261,7 @@ class _AuthScreenState extends State<AuthScreen> {
           validator: _passwordValidator,
         ),
         const SizedBox(height: 10),
-        Text('Conta demo: cliente@demo.local / demo123',
+        Text('Contas demo: cliente@demo.local / demo123 ou admin / admin',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall),
       ],
@@ -439,12 +426,16 @@ class _AuthScreenState extends State<AuthScreen> {
           : null;
   String? _documentValidator(String? value) =>
       value == null || value.trim().length < 6 ? 'Informe CPF ou CNPJ.' : null;
-  String? _passwordValidator(String? value) => value == null || value.length < 6
-      ? 'A senha deve ter ao menos 6 caracteres.'
+  String? _passwordValidator(String? value) => value == null || value.length < 4
+      ? 'A senha deve ter ao menos 4 caracteres.'
       : null;
   String? _emailValidator(String? value) =>
       value == null || !value.contains('@')
           ? 'Informe um e-mail válido.'
+          : null;
+  String? _loginIdentifierValidator(String? value) =>
+      value == null || value.trim().length < 3
+          ? 'Informe e-mail ou usuario.'
           : null;
 }
 

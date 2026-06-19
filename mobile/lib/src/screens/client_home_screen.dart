@@ -12,6 +12,7 @@ class ClientHomeScreen extends StatefulWidget {
     required this.user,
     required this.isDarkMode,
     this.onThemeModeChanged,
+    this.onLogout,
     super.key,
   });
 
@@ -19,6 +20,7 @@ class ClientHomeScreen extends StatefulWidget {
   final User user;
   final bool isDarkMode;
   final ValueChanged<bool>? onThemeModeChanged;
+  final VoidCallback? onLogout;
 
   @override
   State<ClientHomeScreen> createState() => _ClientHomeScreenState();
@@ -36,6 +38,7 @@ class _ClientHomeScreenState extends State<ClientHomeScreen> {
         user: widget.user,
         isDarkMode: widget.isDarkMode,
         onThemeModeChanged: widget.onThemeModeChanged,
+        onLogout: widget.onLogout,
       ),
     ];
 

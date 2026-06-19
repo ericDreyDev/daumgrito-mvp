@@ -133,7 +133,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
       );
       if (!mounted) return;
       _showMessage('Perfil profissional salvo.');
-      setState(() => _futureProfile = _loadProfile());
+      setState(() {
+        _futureProfile = _loadProfile();
+      });
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -180,7 +182,9 @@ class _ProviderProfileScreenState extends State<ProviderProfileScreen> {
 
           if (snapshot.hasError) {
             return _LoadError(onRetry: () {
-              setState(() => _futureProfile = _loadProfile());
+              setState(() {
+                _futureProfile = _loadProfile();
+              });
             });
           }
 

@@ -14,6 +14,7 @@ class ProviderHomeScreen extends StatefulWidget {
     required this.user,
     required this.isDarkMode,
     this.onThemeModeChanged,
+    this.onLogout,
     super.key,
   });
 
@@ -21,6 +22,7 @@ class ProviderHomeScreen extends StatefulWidget {
   final User user;
   final bool isDarkMode;
   final ValueChanged<bool>? onThemeModeChanged;
+  final VoidCallback? onLogout;
 
   @override
   State<ProviderHomeScreen> createState() => _ProviderHomeScreenState();
@@ -40,6 +42,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
         user: widget.user,
         isDarkMode: widget.isDarkMode,
         onThemeModeChanged: widget.onThemeModeChanged,
+        onLogout: widget.onLogout,
       ),
     ];
 

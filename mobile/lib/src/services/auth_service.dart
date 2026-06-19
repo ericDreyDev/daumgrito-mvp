@@ -42,4 +42,9 @@ class AuthService {
       token: token,
     );
   }
+
+  Future<User> currentUser() async {
+    final data = await _apiClient.get('/users/me') as Map<String, dynamic>;
+    return User.fromJson(data);
+  }
 }

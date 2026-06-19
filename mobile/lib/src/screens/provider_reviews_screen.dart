@@ -37,7 +37,9 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
   }
 
   void _reload() {
-    setState(() => _futureReviews = _loadReviews());
+    setState(() {
+      _futureReviews = _loadReviews();
+    });
   }
 
   @override

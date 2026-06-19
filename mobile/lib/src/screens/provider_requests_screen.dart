@@ -31,7 +31,9 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
   }
 
   void _reload() {
-    setState(() => _futureRequests = _service.listMine());
+    setState(() {
+      _futureRequests = _service.listMine();
+    });
   }
 
   List<ServiceRequest> _filterRequests(List<ServiceRequest> requests) {

@@ -1,4 +1,4 @@
-export type UserType = "client" | "provider";
+export type UserType = "client" | "provider" | "admin";
 
 export type RequestStatus =
   | "Aguardando aceite"
@@ -22,4 +22,6 @@ export interface AuthUser {
   city: string;
   neighborhood: string;
   userType: UserType;
+  isActive: boolean;
+  isBlocked: boolean;
 }

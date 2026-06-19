@@ -82,7 +82,9 @@ class _ProviderListScreenState extends State<ProviderListScreen> {
   }
 
   void _search() {
-    setState(() => _futureProviders = _loadProviders());
+    setState(() {
+      _futureProviders = _loadProviders();
+    });
   }
 
   void _clearFilters() {

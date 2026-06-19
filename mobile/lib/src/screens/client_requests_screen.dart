@@ -31,7 +31,9 @@ class _ClientRequestsScreenState extends State<ClientRequestsScreen> {
   }
 
   void _reload() {
-    setState(() => _futureRequests = _service.listMine());
+    setState(() {
+      _futureRequests = _service.listMine();
+    });
   }
 
   List<ServiceRequest> _filterRequests(List<ServiceRequest> requests) {

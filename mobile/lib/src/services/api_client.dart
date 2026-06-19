@@ -16,6 +16,10 @@ class ApiClient {
     _token = token;
   }
 
+  void clearToken() {
+    _token = null;
+  }
+
   Future<dynamic> get(String path, {Map<String, String>? query}) async {
     final uri = Uri.parse('$baseUrl$path').replace(queryParameters: query);
     final response = await _httpClient.get(uri, headers: _headers());

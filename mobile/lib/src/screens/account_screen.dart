@@ -2,19 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../models/user.dart';
 import '../widgets/app_logo.dart';
-import 'auth_screen.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({
     required this.user,
     required this.isDarkMode,
     this.onThemeModeChanged,
+    this.onLogout,
     super.key,
   });
 
   final User user;
   final bool isDarkMode;
   final ValueChanged<bool>? onThemeModeChanged;
+  final VoidCallback? onLogout;
 
   @override
   State<AccountScreen> createState() => _AccountScreenState();
@@ -31,15 +32,7 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   void _logout() {
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => AuthScreen(
-          isDarkMode: _isDarkMode,
-          onThemeModeChanged: widget.onThemeModeChanged,
-        ),
-      ),
-      (_) => false,
-    );
+    widget.onLogout?.call();
   }
 
   @override
@@ -206,9 +199,11 @@ class _ProfileHeader extends StatelessWidget {
                   Text(user.name,
                       style: Theme.of(context).textTheme.titleLarge),
                   const SizedBox(height: 3),
-                  Text(user.userType == UserType.client
-                      ? 'Cliente'
-                      : 'Prestador'),
+                  Text(switch (user.userType) {
+                    UserType.admin => 'Administrador',
+                    UserType.provider => 'Prestador',
+                    UserType.client => 'Cliente',
+                  }),
                 ],
               ),
             ),

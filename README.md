@@ -20,6 +20,8 @@ MVP para conectar clientes que precisam contratar serviços domiciliares com pre
 - Aba de solicitações recebidas para prestadores.
 - Aba de histórico de atendimentos para prestadores, com filtros por data, categoria, status e avaliação.
 - Perfil público do prestador para clientes, com avaliação média, região, serviços realizados e comentários.
+- Sessão persistida no Flutter com restauração automática por token.
+- Menu administrativo simples para aprovar/reprovar prestadores, consultar histórico de aprovação e gerenciar usuários.
 - Chat demonstrativo, avaliações e pagamento simulado.
 
 ## Rodando localmente
@@ -129,6 +131,15 @@ O perfil do prestador inclui:
 - `GET /users/me`
 - `PUT /users/me`
 
+### Administração
+
+- `GET /admin/providers/pending`
+- `PATCH /admin/providers/:providerId/approval`
+- `GET /admin/providers/approval-history`
+- `GET /admin/users`
+- `PATCH /admin/users/:userId/access`
+- `POST /admin/users/:userId/reset-password`
+
 ### Prestadores
 
 - `GET /providers`
@@ -181,6 +192,9 @@ Status de solicitação:
 - Prestador pendente ou reprovado não recebe solicitações.
 - Apenas prestadores alteram status da solicitação.
 - O cliente avalia apenas solicitações finalizadas.
+- Apenas usuários `admin` acessam as rotas e telas administrativas.
+- Admin pode aprovar/reprovar prestadores, redefinir senha, inativar, ativar, bloquear e desbloquear usuários.
+- Usuários inativos ou bloqueados não conseguem fazer login nem continuar usando token antigo.
 
 ## Usuários demo
 
@@ -196,9 +210,17 @@ Cliente demo:
 - E-mail: `cliente@demo.local`
 - Senha: `demo123`
 
+Administrador demo:
+
+- Login: `admin`
+- Senha: `admin`
+
 ## Próximos passos naturais
 
-- Criar fluxo administrativo para aprovar/reprovar prestadores.
+- Separar onboarding de cliente e prestador em etapas guiadas.
+- Trocar chat demonstrativo por chat persistido por solicitação no Flutter.
+- Persistir agenda do prestador na API.
+- Criar revisão da solicitação antes do envio.
 - Persistir respostas públicas de prestadores às avaliações.
 - Completar autorização por relacionamento em chat, pagamento, avaliação e solicitação.
 - Evoluir upload real de documentos/selfie em vez de URLs/campos textuais.

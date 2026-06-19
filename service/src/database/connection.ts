@@ -18,7 +18,9 @@ export async function initializeDatabase() {
       password_hash TEXT NOT NULL,
       city TEXT NOT NULL,
       neighborhood TEXT NOT NULL,
-      user_type TEXT NOT NULL CHECK (user_type IN ('client', 'provider')),
+      user_type TEXT NOT NULL CHECK (user_type IN ('client', 'provider', 'admin')),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -86,10 +88,23 @@ export async function initializeDatabase() {
       status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado')),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS provider_approval_history (
+      id UUID PRIMARY KEY,
+      provider_id UUID NOT NULL REFERENCES provider_profiles(id) ON DELETE CASCADE,
+      admin_id UUID NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL CHECK (status IN ('Aprovado', 'Reprovado')),
+      reason TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
   await db.query(`
     ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT '';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_user_type_check;
+    ALTER TABLE users ADD CONSTRAINT users_user_type_check CHECK (user_type IN ('client', 'provider', 'admin'));
     ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS experience TEXT;
     ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS documents JSONB NOT NULL DEFAULT '[]'::jsonb;
     ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS selfie_url TEXT;
@@ -103,6 +118,7 @@ export async function initializeDatabase() {
   `);
 
   await seedServiceCategories();
+  await seedAdminUser();
   await seedDemoClients();
   await seedDemoProviders();
 }
@@ -200,4 +216,19 @@ async function seedDemoClients() {
       ]
     );
   }
+}
+
+async function seedAdminUser() {
+  const passwordHash = await bcrypt.hash("admin", 10);
+
+  await db.query(
+    `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type, is_active, is_blocked)
+     VALUES ($1, 'Administrador', 'admin', 'admin', 'admin', $2, 'Sistema', 'Admin', 'admin', true, false)
+     ON CONFLICT (id) DO UPDATE
+       SET password_hash = EXCLUDED.password_hash,
+           user_type = 'admin',
+           is_active = true,
+           is_blocked = false`,
+    ["99999999-9999-4999-8999-999999999999", passwordHash]
+  );
 }

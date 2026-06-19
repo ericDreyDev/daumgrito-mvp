@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { db } from "../database/connection.js";
+import type { ProviderValidationStatus } from "../models/types.js";
 
 export interface ProviderFilters {
   name?: string;
@@ -162,6 +163,72 @@ export async function listProviders(filters: ProviderFilters) {
   );
 
   return result.rows.map(parseProvider);
+}
+
+export async function listPendingProviders() {
+  const result = await db.query(
+    `${providerSelect()}
+     WHERE pp.validation_status = 'Pendente'
+     ORDER BY u.name ASC`
+  );
+
+  return result.rows.map(parseProvider);
+}
+
+export async function setProviderValidationStatus(
+  providerId: string,
+  adminId: string,
+  status: Exclude<ProviderValidationStatus, "Pendente">,
+  reason?: string
+) {
+  const result = await db.query(
+    `UPDATE provider_profiles
+     SET validation_status = $1,
+         is_online = CASE WHEN $1 = 'Aprovado' THEN is_online ELSE false END
+     WHERE id = $2
+     RETURNING id`,
+    [status, providerId]
+  );
+
+  if (!result.rows[0]) return undefined;
+
+  await db.query(
+    `INSERT INTO provider_approval_history (id, provider_id, admin_id, status, reason)
+     VALUES ($1, $2, $3, $4, $5)`,
+    [randomUUID(), providerId, adminId, status, reason ?? null]
+  );
+
+  return findProviderById(providerId);
+}
+
+export async function listProviderApprovalHistory() {
+  const result = await db.query(
+    `SELECT
+       pah.id,
+       pah.provider_id,
+       pah.admin_id,
+       pah.status,
+       pah.reason,
+       pah.created_at,
+       provider_user.name AS provider_name,
+       admin_user.name AS admin_name
+     FROM provider_approval_history pah
+     JOIN provider_profiles pp ON pp.id = pah.provider_id
+     JOIN users provider_user ON provider_user.id = pp.user_id
+     JOIN users admin_user ON admin_user.id = pah.admin_id
+     ORDER BY pah.created_at DESC`
+  );
+
+  return result.rows.map((row) => ({
+    id: row.id,
+    providerId: row.provider_id,
+    adminId: row.admin_id,
+    status: row.status,
+    reason: row.reason,
+    createdAt: row.created_at,
+    providerName: row.provider_name,
+    adminName: row.admin_name
+  }));
 }
 
 export async function updateProviderRating(providerId: string) {
