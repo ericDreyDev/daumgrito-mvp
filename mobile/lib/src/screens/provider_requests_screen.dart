@@ -36,12 +36,12 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
 
   List<ServiceRequest> _filterRequests(List<ServiceRequest> requests) {
     if (_filter == 'Novas') {
-      return requests.where((request) => request.status == 'Solicitado').toList();
+      return requests.where((request) => request.status == 'Solicitado' || request.status == 'Aguardando aceite').toList();
     }
     if (_filter == 'Em andamento') {
-      return requests.where((request) => request.status == 'Em negociação' || request.status == 'Agendado' || request.status == 'Em andamento').toList();
+      return requests.where((request) => request.status == 'Aceito' || request.status == 'Agendado' || request.status == 'Em andamento').toList();
     }
-    if (_filter == 'Concluídas') {
+    if (_filter == 'Finalizadas') {
       return requests.where((request) => request.isCompleted).toList();
     }
     return requests;
@@ -57,7 +57,7 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: Text('Solicitações recebidas', style: Theme.of(context).textTheme.headlineSmall)),
+                Expanded(child: Text('Solicitacoes recebidas', style: Theme.of(context).textTheme.headlineSmall)),
                 IconButton.filledTonal(
                   onPressed: _reload,
                   icon: const Icon(Icons.refresh_rounded),
@@ -71,7 +71,7 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
-                children: ['Novas', 'Em andamento', 'Concluídas', 'Todas'].map((filter) {
+                children: ['Novas', 'Em andamento', 'Finalizadas', 'Todas'].map((filter) {
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: ChoiceChip(
@@ -97,8 +97,8 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
                 if (snapshot.hasError) {
                   return _EmptyProviderRequests(
                     icon: Icons.cloud_off_rounded,
-                    title: 'Não foi possível carregar',
-                    message: 'Confira se a API está rodando e tente novamente.',
+                    title: 'Nao foi possivel carregar',
+                    message: 'Confira se a API esta rodando e tente novamente.',
                     onAction: _reload,
                   );
                 }
@@ -108,7 +108,7 @@ class _ProviderRequestsScreenState extends State<ProviderRequestsScreen> {
                   return _EmptyProviderRequests(
                     icon: Icons.assignment_late_rounded,
                     title: 'Nenhum pedido nesta lista',
-                    message: 'Novas solicitações aparecerão aqui assim que clientes escolherem seu perfil.',
+                    message: 'Novas solicitacoes aparecerao aqui quando clientes escolherem seu perfil.',
                     onAction: _reload,
                   );
                 }
@@ -176,7 +176,7 @@ class _ProviderRequestCard extends StatelessWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.chevron_right_rounded),
+                  _StatusPill(status: request.status),
                 ],
               ),
               const SizedBox(height: 14),
@@ -187,9 +187,17 @@ class _ProviderRequestCard extends StatelessWidget {
                   const Icon(Icons.place_rounded, size: 18, color: Color(0xFF667085)),
                   const SizedBox(width: 6),
                   Expanded(child: Text(request.locationNeighborhood)),
-                  const Icon(Icons.event_rounded, size: 18, color: Color(0xFF667085)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.event_available_rounded, size: 18, color: Color(0xFF667085)),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text('Cliente pediu: ${_formatDate(request.desiredDate)}')),
+                  const Icon(Icons.schedule_rounded, size: 18, color: Color(0xFF667085)),
                   const SizedBox(width: 4),
-                  Text(_formatDate(request.desiredDate)),
+                  Text(_formatDate(request.createdAt)),
                 ],
               ),
             ],
@@ -201,6 +209,27 @@ class _ProviderRequestCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.status});
+
+  final String status;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        status,
+        style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer, fontSize: 12, fontWeight: FontWeight.w800),
+      ),
+    );
   }
 }
 

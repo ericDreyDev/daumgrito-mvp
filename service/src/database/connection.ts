@@ -33,9 +33,17 @@ export async function initializeDatabase() {
       photo_url TEXT,
       services JSONB NOT NULL DEFAULT '[]'::jsonb,
       professional_description TEXT,
+      experience TEXT,
       availability TEXT,
       average_price TEXT,
-      average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0
+      average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0,
+      document_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
+      verification_selfie_url TEXT,
+      validation_status TEXT NOT NULL DEFAULT 'Pendente' CHECK (validation_status IN ('Pendente', 'Aprovado', 'Reprovado')),
+      base_address TEXT,
+      service_radius_km INTEGER NOT NULL DEFAULT 5,
+      use_current_location BOOLEAN NOT NULL DEFAULT false,
+      is_online BOOLEAN NOT NULL DEFAULT false
     );
 
     CREATE TABLE IF NOT EXISTS service_requests (
@@ -46,7 +54,7 @@ export async function initializeDatabase() {
       description TEXT NOT NULL,
       desired_date DATE NOT NULL,
       location_neighborhood TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'Solicitado',
+      status TEXT NOT NULL DEFAULT 'Aguardando aceite',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -79,6 +87,15 @@ export async function initializeDatabase() {
   `);
 
   await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT ''");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS experience TEXT");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS document_urls JSONB NOT NULL DEFAULT '[]'::jsonb");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS verification_selfie_url TEXT");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS validation_status TEXT NOT NULL DEFAULT 'Pendente'");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS base_address TEXT");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_radius_km INTEGER NOT NULL DEFAULT 5");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS use_current_location BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS is_online BOOLEAN NOT NULL DEFAULT false");
+  await db.query("ALTER TABLE service_requests ALTER COLUMN status SET DEFAULT 'Aguardando aceite'");
 
   await seedServiceCategories();
   await seedDemoClients();
@@ -97,7 +114,7 @@ async function seedServiceCategories() {
 async function seedDemoProviders() {
   const passwordHash = await bcrypt.hash("demo123", 10);
 
-  for (const provider of demoProviders) {
+  for (const provider of demoProviders as any[]) {
     await db.query(
       `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'provider')
@@ -116,18 +133,31 @@ async function seedDemoProviders() {
 
     await db.query(
       `INSERT INTO provider_profiles
-       (id, user_id, services, professional_description, availability, average_price, average_rating)
-       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7)
+       (id, user_id, services, professional_description, experience, availability, average_price, average_rating, validation_status, base_address, service_radius_km, is_online)
+       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, 'Aprovado', $9, $10, true)
        ON CONFLICT (id) DO NOTHING`,
       [
         provider.profileId,
         provider.userId,
         JSON.stringify(provider.services),
         provider.professionalDescription,
+        provider.experience ?? null,
         provider.availability,
         provider.averagePrice,
-        provider.averageRating
+        provider.averageRating,
+        provider.baseAddress ?? `${provider.city}, ${provider.neighborhood}`,
+        provider.serviceRadiusKm ?? 8
       ]
+    );
+
+    await db.query(
+      `UPDATE provider_profiles
+       SET validation_status = 'Aprovado',
+           is_online = true,
+           base_address = COALESCE(base_address, $2),
+           service_radius_km = COALESCE(service_radius_km, $3)
+       WHERE id = $1`,
+      [provider.profileId, provider.baseAddress ?? `${provider.city}, ${provider.neighborhood}`, provider.serviceRadiusKm ?? 8]
     );
   }
 }

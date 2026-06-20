@@ -6,7 +6,11 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "docker-start": "powershell -ExecutionPolicy Bypass -File ./scripts/docker-start.ps1",
+    "docker-up": "docker compose up -d",
+    "docker-down": "docker compose down",
+    "docker-logs": "docker compose logs -f"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

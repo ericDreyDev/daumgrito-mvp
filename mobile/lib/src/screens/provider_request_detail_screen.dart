@@ -38,6 +38,7 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
       final request = await _service.updateStatus(_request.id, status);
       if (!mounted) return;
       setState(() => _request = request);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status atualizado para $status.')));
     } finally {
       if (mounted) setState(() => _isUpdating = false);
     }
@@ -45,8 +46,10 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
 
   @override
   Widget build(BuildContext context) {
+    final waiting = _request.status == 'Solicitado' || _request.status == 'Aguardando aceite';
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Pedido recebido')),
+      appBar: AppBar(title: const Text('Detalhe do pedido')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
         children: [
@@ -79,19 +82,21 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Detalhes do cliente',
+            title: 'Cliente',
             children: [
-              _InfoLine(icon: Icons.phone_rounded, label: 'Telefone', value: _request.clientPhone.isEmpty ? 'Não informado' : _request.clientPhone),
+              _InfoLine(icon: Icons.phone_rounded, label: 'Telefone', value: _request.clientPhone.isEmpty ? 'Nao informado' : _request.clientPhone),
               _InfoLine(icon: Icons.location_city_rounded, label: 'Cidade', value: _request.clientCity),
-              _InfoLine(icon: Icons.place_rounded, label: 'Bairro', value: _request.locationNeighborhood),
+              _InfoLine(icon: Icons.place_rounded, label: 'Bairro/regiao', value: _request.locationNeighborhood),
             ],
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Solicitação',
+            title: 'Servico solicitado',
             children: [
-              _InfoLine(icon: Icons.notes_rounded, label: 'Descrição', value: _request.description),
-              _InfoLine(icon: Icons.event_rounded, label: 'Data desejada', value: _formatDate(_request.desiredDate)),
+              _InfoLine(icon: Icons.category_rounded, label: 'Categoria', value: _request.service),
+              _InfoLine(icon: Icons.notes_rounded, label: 'Descricao', value: _request.description),
+              _InfoLine(icon: Icons.event_rounded, label: 'Data e hora solicitada', value: _formatDate(_request.desiredDate)),
+              _InfoLine(icon: Icons.schedule_rounded, label: 'Criado em', value: _formatDate(_request.createdAt)),
               _InfoLine(icon: Icons.flag_rounded, label: 'Status', value: _request.status),
             ],
           ),
@@ -103,15 +108,15 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
               );
             },
             icon: const Icon(Icons.chat_bubble_outline_rounded),
-            label: const Text('Responder chat demonstrativo'),
+            label: const Text('Responder no chat demonstrativo'),
           ),
           const SizedBox(height: 10),
-          if (_request.status == 'Solicitado') ...[
+          if (waiting)
             Row(
               children: [
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: _isUpdating ? null : () => _updateStatus('Cancelado'),
+                    onPressed: _isUpdating ? null : () => _updateStatus('Recusado'),
                     icon: const Icon(Icons.close_rounded),
                     label: const Text('Recusar'),
                   ),
@@ -119,28 +124,25 @@ class _ProviderRequestDetailScreenState extends State<ProviderRequestDetailScree
                 const SizedBox(width: 10),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _isUpdating ? null : () => _updateStatus('Agendado'),
+                    onPressed: _isUpdating ? null : () => _updateStatus('Aceito'),
                     icon: const Icon(Icons.check_rounded),
                     label: const Text('Aceitar'),
                   ),
                 ),
               ],
             ),
-          ],
-          if (_request.status == 'Agendado') ...[
+          if (_request.status == 'Aceito' || _request.status == 'Agendado')
             FilledButton.icon(
               onPressed: _isUpdating ? null : () => _updateStatus('Em andamento'),
               icon: const Icon(Icons.play_arrow_rounded),
               label: const Text('Iniciar atendimento'),
             ),
-          ],
-          if (_request.status == 'Em andamento') ...[
+          if (_request.status == 'Em andamento')
             FilledButton.icon(
-              onPressed: _isUpdating ? null : () => _updateStatus('Concluído'),
+              onPressed: _isUpdating ? null : () => _updateStatus('Finalizado'),
               icon: const Icon(Icons.verified_rounded),
-              label: const Text('Concluir atendimento'),
+              label: const Text('Finalizar atendimento'),
             ),
-          ],
         ],
       ),
     );

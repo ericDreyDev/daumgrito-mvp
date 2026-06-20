@@ -15,15 +15,29 @@ class ProviderService {
     required String photoUrl,
     required List<String> services,
     required String professionalDescription,
+    required String experience,
     required String availability,
     required String averagePrice,
+    required List<String> documentUrls,
+    required String verificationSelfieUrl,
+    required String baseAddress,
+    required int serviceRadiusKm,
+    required bool useCurrentLocation,
+    required bool isOnline,
   }) async {
     final data = await _apiClient.put('/providers/profile', {
       'photoUrl': photoUrl,
       'services': services,
       'professionalDescription': professionalDescription,
+      'experience': experience,
       'availability': availability,
       'averagePrice': averagePrice,
+      'documentUrls': documentUrls,
+      'verificationSelfieUrl': verificationSelfieUrl,
+      'baseAddress': baseAddress,
+      'serviceRadiusKm': serviceRadiusKm,
+      'useCurrentLocation': useCurrentLocation,
+      'isOnline': isOnline,
     }) as Map<String, dynamic>;
 
     return ProviderProfile.fromJson(data);

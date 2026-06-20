@@ -11,22 +11,22 @@ class RequestStatusTimeline extends StatelessWidget {
   final bool compact;
 
   static const _statuses = [
-    'Solicitado',
-    'Em negociação',
-    'Agendado',
+    'Aguardando aceite',
+    'Aceito',
     'Em andamento',
-    'Concluído',
+    'Finalizado',
   ];
 
   @override
   Widget build(BuildContext context) {
     final currentIndex = _normalizedIndex(status);
+    final canceled = _normalize(status) == 'cancelado' || _normalize(status) == 'recusado';
 
     return Column(
       children: [
         Row(
           children: List.generate(_statuses.length, (index) {
-            final done = index <= currentIndex;
+            final done = !canceled && index <= currentIndex;
             return Expanded(
               child: Row(
                 children: [
@@ -44,7 +44,7 @@ class RequestStatusTimeline extends StatelessWidget {
                     Expanded(
                       child: Container(
                         height: 3,
-                        color: index < currentIndex ? Theme.of(context).colorScheme.primary : const Color(0xFFE5EAF1),
+                        color: done && index < currentIndex ? Theme.of(context).colorScheme.primary : const Color(0xFFE5EAF1),
                       ),
                     ),
                 ],
@@ -71,18 +71,30 @@ class RequestStatusTimeline extends StatelessWidget {
   }
 
   int _normalizedIndex(String value) {
-    if (value == 'Cancelado') return 0;
-    final index = _statuses.indexWhere((item) => _normalize(item) == _normalize(value));
-    return index < 0 ? 0 : index;
+    final normalized = _normalize(value);
+    if (normalized == 'solicitado' || normalized == 'aguardando aceite') return 0;
+    if (normalized == 'agendado' || normalized == 'aceito' || normalized == 'em negociacao') return 1;
+    if (normalized == 'em andamento') return 2;
+    if (normalized == 'concluido' || normalized == 'finalizado') return 3;
+    return 0;
   }
 
   String _normalize(String value) {
     return value
-        .replaceAll('Ã§', 'ç')
-        .replaceAll('Ã­', 'í')
-        .replaceAll('Ã£', 'ã')
-        .replaceAll('Ã¡', 'á')
-        .replaceAll('Ã³', 'ó')
-        .replaceAll('Ãº', 'ú');
+        .toLowerCase()
+        .replaceAll('ç', 'c')
+        .replaceAll('ã', 'a')
+        .replaceAll('õ', 'o')
+        .replaceAll('í', 'i')
+        .replaceAll('ú', 'u')
+        .replaceAll('Ã§', 'c')
+        .replaceAll('Ã£', 'a')
+        .replaceAll('Ãµ', 'o')
+        .replaceAll('Ã­', 'i')
+        .replaceAll('Ãº', 'u')
+        .replaceAll('ÃƒÂ§', 'c')
+        .replaceAll('ÃƒÂ£', 'a')
+        .replaceAll('ÃƒÂ­', 'i')
+        .replaceAll('ÃƒÂº', 'u');
   }
 }

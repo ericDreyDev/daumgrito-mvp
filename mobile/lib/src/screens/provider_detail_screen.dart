@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../models/provider.dart';
+import '../models/review.dart';
 import '../services/api_client.dart';
+import '../services/review_service.dart';
 import 'chat_screen.dart';
 import 'service_request_screen.dart';
 
@@ -42,17 +44,19 @@ class ProviderDetailScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => ServiceRequestScreen(
-                          apiClient: apiClient,
-                          provider: provider,
-                          initialDesiredDate: desiredDate,
-                        ),
-                      ),
-                    );
-                  },
+                  onPressed: provider.validationStatus == 'Aprovado' && provider.isOnline
+                      ? () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => ServiceRequestScreen(
+                                apiClient: apiClient,
+                                provider: provider,
+                                initialDesiredDate: desiredDate,
+                              ),
+                            ),
+                          );
+                        }
+                      : null,
                   icon: const Icon(Icons.assignment_turned_in_rounded),
                   label: const Text('Solicitar'),
                 ),
@@ -97,7 +101,9 @@ class ProviderDetailScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      _Metric(label: 'Avaliação', value: provider.averageRating == 0 ? 'Novo' : provider.averageRating.toStringAsFixed(1)),
+                      _Metric(label: 'Avaliacao', value: provider.averageRating == 0 ? 'Novo' : provider.averageRating.toStringAsFixed(1)),
+                      const SizedBox(width: 10),
+                      _Metric(label: 'Servicos', value: provider.completedServicesCount.toString()),
                       const SizedBox(width: 10),
                       _Metric(label: 'Valor', value: provider.averagePrice ?? 'A combinar'),
                     ],
@@ -108,7 +114,7 @@ class ProviderDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Serviços oferecidos',
+            title: 'Servicos oferecidos',
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -118,30 +124,60 @@ class ProviderDetailScreen extends StatelessWidget {
           const SizedBox(height: 14),
           _SectionCard(
             title: 'Sobre o profissional',
-            child: Text(provider.professionalDescription ?? 'Perfil profissional em preenchimento.'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(provider.professionalDescription ?? 'Perfil profissional em preenchimento.'),
+                if ((provider.experience ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  _InfoLine(icon: Icons.workspace_premium_rounded, text: provider.experience!),
+                ],
+              ],
+            ),
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Disponibilidade e região',
+            title: 'Disponibilidade e regiao',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _InfoLine(icon: Icons.schedule_rounded, text: provider.availability ?? 'Disponibilidade a combinar'),
                 const SizedBox(height: 8),
-                _InfoLine(icon: Icons.map_rounded, text: 'Atende ${provider.city} e região de ${provider.neighborhood}'),
+                _InfoLine(icon: Icons.map_rounded, text: 'Atende ${provider.city}, ${provider.neighborhood} e raio de ${provider.serviceRadiusKm} km'),
               ],
             ),
           ),
           const SizedBox(height: 14),
-          const _SectionCard(
-            title: 'Avaliações',
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _ReviewPreview(name: 'Cliente verificado', text: 'Atendimento rápido, educado e serviço bem feito.', rating: '5.0'),
-                SizedBox(height: 10),
-                _ReviewPreview(name: 'Serviço recente', text: 'Combinou horário e explicou tudo antes de começar.', rating: '4.8'),
-              ],
+          _SectionCard(
+            title: 'Comentarios de clientes',
+            child: FutureBuilder<List<Review>>(
+              future: ReviewService(apiClient).listProviderReviews(provider.id),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Padding(
+                    padding: EdgeInsets.all(12),
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final reviews = snapshot.data ?? [];
+                if (reviews.isEmpty) {
+                  return const Text('Este profissional ainda nao recebeu comentarios.');
+                }
+
+                return Column(
+                  children: reviews.take(5).map((review) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: _ReviewPreview(
+                        name: review.clientName,
+                        text: review.comment.isEmpty ? 'Sem comentario.' : review.comment,
+                        rating: review.rating.toString(),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
           ),
         ],
@@ -162,7 +198,7 @@ class _Metric extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F7F5),
+          color: Theme.of(context).colorScheme.surfaceVariant,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
@@ -230,9 +266,10 @@ class _ReviewPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Theme.of(context).colorScheme.surfaceVariant,
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(

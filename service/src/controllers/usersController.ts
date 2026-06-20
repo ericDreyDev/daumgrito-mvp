@@ -5,7 +5,9 @@ import { AppError } from "../utils/errors.js";
 
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
   phone: z.string().min(8).optional(),
+  document: z.string().min(8).optional(),
   city: z.string().min(2).optional(),
   neighborhood: z.string().min(2).optional()
 });

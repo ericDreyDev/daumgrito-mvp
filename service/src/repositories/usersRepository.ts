@@ -51,15 +51,24 @@ export async function findUserById(id: string) {
   return row ? toAuthUser(row) : undefined;
 }
 
-export async function updateUser(id: string, input: Partial<Omit<AuthUser, "id" | "email" | "userType">>) {
+export async function updateUser(id: string, input: Partial<Omit<AuthUser, "id" | "userType">>) {
   const current = await findUserById(id);
   if (!current) return undefined;
 
   await db.query(
-    `UPDATE users SET name = $1, phone = $2, city = $3, neighborhood = $4 WHERE id = $5`,
+    `UPDATE users
+     SET name = $1,
+         email = $2,
+         phone = $3,
+         document = $4,
+         city = $5,
+         neighborhood = $6
+     WHERE id = $7`,
     [
       input.name ?? current.name,
+      input.email ?? current.email,
       input.phone ?? current.phone,
+      input.document ?? current.document,
       input.city ?? current.city,
       input.neighborhood ?? current.neighborhood,
       id

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/user.dart';
 import '../services/api_client.dart';
 import 'account_screen.dart';
+import 'provider_history_screen.dart';
 import 'provider_profile_screen.dart';
 import 'provider_reviews_screen.dart';
 import 'provider_requests_screen.dart';
@@ -33,6 +34,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
   Widget build(BuildContext context) {
     final screens = [
       ProviderRequestsScreen(apiClient: widget.apiClient),
+      ProviderHistoryScreen(apiClient: widget.apiClient),
       ProviderScheduleScreen(apiClient: widget.apiClient),
       ProviderProfileScreen(apiClient: widget.apiClient),
       ProviderReviewsScreen(apiClient: widget.apiClient),
@@ -50,6 +52,7 @@ class _ProviderHomeScreenState extends State<ProviderHomeScreen> {
         onDestinationSelected: (index) => setState(() => _selectedIndex = index),
         destinations: const [
           NavigationDestination(icon: Icon(Icons.assignment_rounded), label: 'Pedidos'),
+          NavigationDestination(icon: Icon(Icons.history_rounded), label: 'Histórico'),
           NavigationDestination(icon: Icon(Icons.calendar_month_rounded), label: 'Agenda'),
           NavigationDestination(icon: Icon(Icons.badge_rounded), label: 'Perfil'),
           NavigationDestination(icon: Icon(Icons.star_rounded), label: 'Avaliações'),

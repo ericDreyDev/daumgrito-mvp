@@ -94,8 +94,15 @@ class _AuthScreenState extends State<AuthScreen> {
           'photoUrl': _photoController.text.trim(),
           'services': _selectedServices.toList(),
           'professionalDescription': _descriptionController.text.trim(),
+          'experience': '',
           'availability': _availabilityController.text.trim(),
           'averagePrice': _averagePriceController.text.trim(),
+          'documentUrls': const [],
+          'verificationSelfieUrl': '',
+          'baseAddress': '${_cityController.text.trim()}, ${_neighborhoodController.text.trim()}',
+          'serviceRadiusKm': 5,
+          'useCurrentLocation': false,
+          'isOnline': false,
         });
       }
 

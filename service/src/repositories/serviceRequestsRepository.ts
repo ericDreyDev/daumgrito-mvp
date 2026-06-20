@@ -49,10 +49,15 @@ function serviceRequestSelect() {
       pp.availability AS provider_availability,
       pp.average_price AS provider_average_price,
       pp.average_rating AS provider_average_rating,
+      pp.validation_status AS provider_validation_status,
+      pp.is_online AS provider_is_online,
       client_user.name AS client_name,
       client_user.phone AS client_phone,
       client_user.city AS client_city,
       client_user.neighborhood AS client_neighborhood,
+      r.rating AS review_rating,
+      r.comment AS review_comment,
+      p.amount AS payment_amount,
       EXISTS (
         SELECT 1 FROM reviews r WHERE r.service_request_id = sr.id
       ) AS reviewed
@@ -60,5 +65,7 @@ function serviceRequestSelect() {
     JOIN provider_profiles pp ON pp.id = sr.provider_id
     JOIN users provider_user ON provider_user.id = pp.user_id
     JOIN users client_user ON client_user.id = sr.client_id
+    LEFT JOIN reviews r ON r.service_request_id = sr.id
+    LEFT JOIN payments p ON p.service_request_id = sr.id
   `;
 }

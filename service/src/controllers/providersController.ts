@@ -14,8 +14,15 @@ const profileSchema = z.object({
   photoUrl: z.string().url().optional().or(z.literal("")),
   services: z.array(z.string().min(2)).min(1),
   professionalDescription: z.string().min(10),
+  experience: z.string().optional().default(""),
   availability: z.string().min(2),
-  averagePrice: z.string().min(1)
+  averagePrice: z.string().min(1),
+  documentUrls: z.array(z.string().min(2)).optional().default([]),
+  verificationSelfieUrl: z.string().url().optional().or(z.literal("")).default(""),
+  baseAddress: z.string().min(2),
+  serviceRadiusKm: z.coerce.number().int().min(1).max(100),
+  useCurrentLocation: z.boolean().optional().default(false),
+  isOnline: z.boolean().optional().default(false)
 });
 
 export async function getProviders(req: Request, res: Response) {
@@ -43,7 +50,11 @@ export async function putProviderProfile(req: Request, res: Response) {
   }
 
   const input = profileSchema.parse(req.body);
-  const provider = await upsertProviderProfile(req.user!.id, { ...input, photoUrl: input.photoUrl || null });
+  const provider = await upsertProviderProfile(req.user!.id, {
+    ...input,
+    photoUrl: input.photoUrl || null,
+    verificationSelfieUrl: input.verificationSelfieUrl || null
+  });
   return res.json(provider);
 }
 
