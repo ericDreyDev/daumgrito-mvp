@@ -144,7 +144,7 @@ class _ServiceRequestScreenState extends State<ServiceRequestScreen> {
                         style: Theme.of(context).textTheme.titleMedium),
                     const SizedBox(height: 14),
                     DropdownButtonFormField<String>(
-                      initialValue: _selectedService,
+                      value: _selectedService,
                       decoration: const InputDecoration(
                           labelText: 'Serviço desejado',
                           prefixIcon: Icon(Icons.home_repair_service_rounded)),

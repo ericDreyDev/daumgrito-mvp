@@ -209,7 +209,7 @@ class _HistoryFilters extends StatelessWidget {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: categoryFilter,
+                    value: categoryFilter,
                     decoration: const InputDecoration(labelText: 'Categoria'),
                     items: categories
                         .map((item) =>
@@ -223,7 +223,7 @@ class _HistoryFilters extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: statusFilter,
+                    value: statusFilter,
                     decoration: const InputDecoration(labelText: 'Status'),
                     items: statuses
                         .map((item) =>
@@ -241,7 +241,7 @@ class _HistoryFilters extends StatelessWidget {
               children: [
                 Expanded(
                   child: DropdownButtonFormField<String>(
-                    initialValue: ratingFilter,
+                    value: ratingFilter,
                     decoration: const InputDecoration(labelText: 'Avaliação'),
                     items: ['Todas', '5', '4', '3', '2', '1']
                         .map((item) =>
