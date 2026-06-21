@@ -1,6 +1,5 @@
 import type { Request, Response } from "express";
 import { z } from "zod";
-import { findProviderById } from "../repositories/providersRepository.js";
 import {
   createServiceRequest,
   findServiceRequestById,
@@ -19,20 +18,7 @@ const createSchema = z.object({
 });
 
 const statusSchema = z.object({
-  status: z.enum([
-    "Solicitado",
-    "Aguardando aceite",
-    "Em negociação",
-    "Em negociaÃ§Ã£o",
-    "Agendado",
-    "Aceito",
-    "Recusado",
-    "Em andamento",
-    "Concluído",
-    "ConcluÃ­do",
-    "Finalizado",
-    "Cancelado"
-  ])
+  status: z.enum(["Aguardando aceite", "Aceito", "Recusado", "Em andamento", "Finalizado", "Cancelado"])
 });
 
 export async function postServiceRequest(req: Request, res: Response) {
@@ -41,13 +27,11 @@ export async function postServiceRequest(req: Request, res: Response) {
   }
 
   const input = createSchema.parse(req.body);
-  const provider = await findProviderById(input.providerId);
-  if (!provider) throw new AppError(404, "Prestador não encontrado.");
-  if (provider.validationStatus !== "Aprovado" || !provider.isOnline) {
-    throw new AppError(422, "Este prestador ainda não está disponível para receber solicitações.");
+  const serviceRequest = await createServiceRequest(req.user!.id, input);
+  if (!serviceRequest) {
+    throw new AppError(422, "Este prestador ainda não está aprovado e online para receber solicitações.");
   }
-
-  return res.status(201).json(await createServiceRequest(req.user!.id, input));
+  return res.status(201).json(serviceRequest);
 }
 
 export async function getServiceRequests(req: Request, res: Response) {
@@ -57,26 +41,30 @@ export async function getServiceRequests(req: Request, res: Response) {
 export async function getServiceRequest(req: Request, res: Response) {
   const serviceRequest = await findServiceRequestById(routeParam(req.params.id, "id"));
   if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
+  if (!canAccessServiceRequest(req, serviceRequest)) {
+    throw new AppError(403, "Você não tem permissão para acessar esta solicitação.");
+  }
   return res.json(serviceRequest);
 }
 
 export async function putServiceRequestStatus(req: Request, res: Response) {
+  if (req.user!.userType !== "provider") {
+    throw new AppError(403, "Apenas prestadores podem alterar o status da solicitação.");
+  }
+
   const { status } = statusSchema.parse(req.body);
-  const requestId = routeParam(req.params.id, "id");
-  const current = await findServiceRequestById(requestId);
+  const id = routeParam(req.params.id, "id");
+  const current = await findServiceRequestById(id);
   if (!current) throw new AppError(404, "Solicitação não encontrada.");
-
-  const isClientOwner = current.client_id === req.user!.id;
-  const isProviderOwner = current.provider_user_id === req.user!.id;
-  if (!isClientOwner && !isProviderOwner) {
-    throw new AppError(403, "Você não tem permissão para alterar esta solicitação.");
+  if (current.provider_user_id !== req.user!.id) {
+    throw new AppError(403, "Apenas o prestador responsável pode alterar esta solicitação.");
   }
 
-  if (req.user!.userType === "client" && status !== "Cancelado") {
-    throw new AppError(403, "Clientes podem cancelar solicitações, mas não alterar o fluxo do atendimento.");
-  }
+  return res.json(await updateServiceRequestStatus(id, status));
+}
 
-  const serviceRequest = await updateServiceRequestStatus(requestId, status);
-  if (!serviceRequest) throw new AppError(404, "Solicitação não encontrada.");
-  return res.json(serviceRequest);
+function canAccessServiceRequest(req: Request, serviceRequest: any) {
+  if (req.user!.userType === "client") return serviceRequest.client_id === req.user!.id;
+  if (req.user!.userType === "provider") return serviceRequest.provider_user_id === req.user!.id;
+  return false;
 }

@@ -1,20 +1,16 @@
-export type UserType = "client" | "provider";
+export type UserType = "client" | "provider" | "admin";
 
 export type RequestStatus =
-  | "Solicitado"
   | "Aguardando aceite"
-  | "Em negociação"
-  | "Em negociaÃ§Ã£o"
-  | "Agendado"
   | "Aceito"
   | "Recusado"
   | "Em andamento"
-  | "Concluído"
-  | "ConcluÃ­do"
   | "Finalizado"
   | "Cancelado";
 
-export type PaymentMethod = "Pix" | "cartÃ£o" | "dinheiro";
+export type ProviderValidationStatus = "Pendente" | "Aprovado" | "Reprovado";
+
+export type PaymentMethod = "Pix" | "cartão" | "dinheiro";
 export type PaymentStatus = "pendente" | "pago" | "cancelado";
 
 export interface AuthUser {
@@ -26,4 +22,6 @@ export interface AuthUser {
   city: string;
   neighborhood: string;
   userType: UserType;
+  isActive: boolean;
+  isBlocked: boolean;
 }

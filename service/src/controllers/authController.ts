@@ -18,7 +18,7 @@ const registerSchema = z.object({
 });
 
 const loginSchema = z.object({
-  email: z.string().email().transform((value) => value.toLowerCase()),
+  email: z.string().min(3).transform((value) => value.toLowerCase().trim()),
   password: z.string().min(1)
 });
 
@@ -48,5 +48,9 @@ export async function login(req: Request, res: Response) {
   }
 
   const user = publicUserFromRow(userRow);
+  if (!user.isActive || user.isBlocked) {
+    throw new AppError(403, "UsuÃ¡rio inativo ou bloqueado.");
+  }
+
   return res.json({ user, token: signToken(user) });
 }

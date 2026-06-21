@@ -55,11 +55,19 @@ class _ReviewScreenState extends State<ReviewScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.star_rounded, size: 54, color: Color(0xFFF59E0B)),
+                const Icon(Icons.star_rounded,
+                    size: 54, color: Color(0xFFFF7A00)),
                 const SizedBox(height: 12),
-                Text('Avaliação enviada', textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                Text('Avaliação enviada',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w900)),
                 const SizedBox(height: 8),
-                const Text('Sua opinião ajuda outros clientes a escolherem melhor.', textAlign: TextAlign.center),
+                const Text(
+                    'Sua opinião ajuda outros clientes a escolherem melhor.',
+                    textAlign: TextAlign.center),
                 const SizedBox(height: 18),
                 FilledButton(
                   onPressed: () {
@@ -92,9 +100,16 @@ class _ReviewScreenState extends State<ReviewScreen> {
               padding: const EdgeInsets.all(18),
               child: Column(
                 children: [
-                  CircleAvatar(radius: 32, child: Text(widget.request.provider.name.characters.first.toUpperCase())),
+                  CircleAvatar(
+                      radius: 32,
+                      child: Text(widget.request.provider.name.characters.first
+                          .toUpperCase())),
                   const SizedBox(height: 10),
-                  Text(widget.request.provider.name, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                  Text(widget.request.provider.name,
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(fontWeight: FontWeight.w900)),
                   const SizedBox(height: 4),
                   Text(widget.request.service),
                 ],
@@ -108,7 +123,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text('Como foi o atendimento?', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+                  Text('Como foi o atendimento?',
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleMedium
+                          ?.copyWith(fontWeight: FontWeight.w900)),
                   const SizedBox(height: 12),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -117,9 +136,11 @@ class _ReviewScreenState extends State<ReviewScreen> {
                       return IconButton(
                         onPressed: () => setState(() => _rating = star),
                         icon: Icon(
-                          star <= _rating ? Icons.star_rounded : Icons.star_border_rounded,
+                          star <= _rating
+                              ? Icons.star_rounded
+                              : Icons.star_border_rounded,
                           size: 36,
-                          color: const Color(0xFFF59E0B),
+                          color: const Color(0xFFFF7A00),
                         ),
                       );
                     }),
@@ -136,7 +157,10 @@ class _ReviewScreenState extends State<ReviewScreen> {
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
-                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.w700)),
+                    Text(_error!,
+                        style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                            fontWeight: FontWeight.w700)),
                   ],
                   const SizedBox(height: 18),
                   FilledButton.icon(

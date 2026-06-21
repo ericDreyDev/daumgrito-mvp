@@ -18,7 +18,9 @@ export async function initializeDatabase() {
       password_hash TEXT NOT NULL,
       city TEXT NOT NULL,
       neighborhood TEXT NOT NULL,
-      user_type TEXT NOT NULL CHECK (user_type IN ('client', 'provider')),
+      user_type TEXT NOT NULL CHECK (user_type IN ('client', 'provider', 'admin')),
+      is_active BOOLEAN NOT NULL DEFAULT TRUE,
+      is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
 
@@ -34,16 +36,18 @@ export async function initializeDatabase() {
       services JSONB NOT NULL DEFAULT '[]'::jsonb,
       professional_description TEXT,
       experience TEXT,
-      availability TEXT,
-      average_price TEXT,
-      average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0,
-      document_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
-      verification_selfie_url TEXT,
+      documents JSONB NOT NULL DEFAULT '[]'::jsonb,
+      selfie_url TEXT,
       validation_status TEXT NOT NULL DEFAULT 'Pendente' CHECK (validation_status IN ('Pendente', 'Aprovado', 'Reprovado')),
       base_address TEXT,
-      service_radius_km INTEGER NOT NULL DEFAULT 5,
-      use_current_location BOOLEAN NOT NULL DEFAULT false,
-      is_online BOOLEAN NOT NULL DEFAULT false
+      service_city TEXT,
+      service_neighborhood TEXT,
+      service_radius_km INTEGER NOT NULL DEFAULT 10,
+      use_current_location BOOLEAN NOT NULL DEFAULT FALSE,
+      is_online BOOLEAN NOT NULL DEFAULT FALSE,
+      availability TEXT,
+      average_price TEXT,
+      average_rating NUMERIC(3, 2) NOT NULL DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS service_requests (
@@ -84,20 +88,37 @@ export async function initializeDatabase() {
       status TEXT NOT NULL DEFAULT 'pendente' CHECK (status IN ('pendente', 'pago', 'cancelado')),
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );
+
+    CREATE TABLE IF NOT EXISTS provider_approval_history (
+      id UUID PRIMARY KEY,
+      provider_id UUID NOT NULL REFERENCES provider_profiles(id) ON DELETE CASCADE,
+      admin_id UUID NOT NULL REFERENCES users(id),
+      status TEXT NOT NULL CHECK (status IN ('Aprovado', 'Reprovado')),
+      reason TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
   `);
 
-  await db.query("ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT ''");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS experience TEXT");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS document_urls JSONB NOT NULL DEFAULT '[]'::jsonb");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS verification_selfie_url TEXT");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS validation_status TEXT NOT NULL DEFAULT 'Pendente'");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS base_address TEXT");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_radius_km INTEGER NOT NULL DEFAULT 5");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS use_current_location BOOLEAN NOT NULL DEFAULT false");
-  await db.query("ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS is_online BOOLEAN NOT NULL DEFAULT false");
-  await db.query("ALTER TABLE service_requests ALTER COLUMN status SET DEFAULT 'Aguardando aceite'");
+  await db.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS document TEXT NOT NULL DEFAULT '';
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS is_blocked BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE users DROP CONSTRAINT IF EXISTS users_user_type_check;
+    ALTER TABLE users ADD CONSTRAINT users_user_type_check CHECK (user_type IN ('client', 'provider', 'admin'));
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS experience TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS documents JSONB NOT NULL DEFAULT '[]'::jsonb;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS selfie_url TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS validation_status TEXT NOT NULL DEFAULT 'Pendente';
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS base_address TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_city TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_neighborhood TEXT;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS service_radius_km INTEGER NOT NULL DEFAULT 10;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS use_current_location BOOLEAN NOT NULL DEFAULT FALSE;
+    ALTER TABLE provider_profiles ADD COLUMN IF NOT EXISTS is_online BOOLEAN NOT NULL DEFAULT FALSE;
+  `);
 
   await seedServiceCategories();
+  await seedAdminUser();
   await seedDemoClients();
   await seedDemoProviders();
 }
@@ -114,7 +135,7 @@ async function seedServiceCategories() {
 async function seedDemoProviders() {
   const passwordHash = await bcrypt.hash("demo123", 10);
 
-  for (const provider of demoProviders as any[]) {
+  for (const provider of demoProviders) {
     await db.query(
       `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'provider')
@@ -133,31 +154,44 @@ async function seedDemoProviders() {
 
     await db.query(
       `INSERT INTO provider_profiles
-       (id, user_id, services, professional_description, experience, availability, average_price, average_rating, validation_status, base_address, service_radius_km, is_online)
-       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, 'Aprovado', $9, $10, true)
+       (id, user_id, services, professional_description, experience, availability, average_price, average_rating,
+        validation_status, base_address, service_city, service_neighborhood, service_radius_km, is_online)
+       VALUES ($1, $2, $3::jsonb, $4, $5, $6, $7, $8, 'Aprovado', $9, $10, $11, $12, true)
        ON CONFLICT (id) DO NOTHING`,
       [
         provider.profileId,
         provider.userId,
         JSON.stringify(provider.services),
         provider.professionalDescription,
-        provider.experience ?? null,
+        provider.experience,
         provider.availability,
         provider.averagePrice,
         provider.averageRating,
-        provider.baseAddress ?? `${provider.city}, ${provider.neighborhood}`,
-        provider.serviceRadiusKm ?? 8
+        provider.baseAddress,
+        provider.city,
+        provider.neighborhood,
+        provider.serviceRadiusKm
       ]
     );
 
     await db.query(
       `UPDATE provider_profiles
-       SET validation_status = 'Aprovado',
-           is_online = true,
+       SET experience = COALESCE(experience, $1),
+           validation_status = 'Aprovado',
            base_address = COALESCE(base_address, $2),
-           service_radius_km = COALESCE(service_radius_km, $3)
-       WHERE id = $1`,
-      [provider.profileId, provider.baseAddress ?? `${provider.city}, ${provider.neighborhood}`, provider.serviceRadiusKm ?? 8]
+           service_city = COALESCE(service_city, $3),
+           service_neighborhood = COALESCE(service_neighborhood, $4),
+           service_radius_km = CASE WHEN service_radius_km = 10 THEN $5 ELSE service_radius_km END,
+           is_online = true
+       WHERE id = $6`,
+      [
+        provider.experience,
+        provider.baseAddress,
+        provider.city,
+        provider.neighborhood,
+        provider.serviceRadiusKm,
+        provider.profileId
+      ]
     );
   }
 }
@@ -182,4 +216,19 @@ async function seedDemoClients() {
       ]
     );
   }
+}
+
+async function seedAdminUser() {
+  const passwordHash = await bcrypt.hash("admin", 10);
+
+  await db.query(
+    `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type, is_active, is_blocked)
+     VALUES ($1, 'Administrador', 'admin', 'admin', 'admin', $2, 'Sistema', 'Admin', 'admin', true, false)
+     ON CONFLICT (id) DO UPDATE
+       SET password_hash = EXCLUDED.password_hash,
+           user_type = 'admin',
+           is_active = true,
+           is_blocked = false`,
+    ["99999999-9999-4999-8999-999999999999", passwordHash]
+  );
 }

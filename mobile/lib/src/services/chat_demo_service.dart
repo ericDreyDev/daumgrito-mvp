@@ -6,14 +6,16 @@ class ChatDemoService {
     _messages.addAll([
       ChatMessage(
         id: '1',
-        text: 'Olá! Vi seu perfil e queria tirar uma dúvida sobre disponibilidade.',
+        text:
+            'Olá! Vi seu perfil e queria tirar uma dúvida sobre disponibilidade.',
         senderName: 'Você',
         sentAt: DateTime.now().subtract(const Duration(minutes: 9)),
         isMine: true,
       ),
       ChatMessage(
         id: '2',
-        text: 'Claro! Me mande o bairro, o serviço e a melhor data para eu avaliar.',
+        text:
+            'Claro! Me mande o bairro, o serviço e a melhor data para eu avaliar.',
         senderName: provider.name,
         sentAt: DateTime.now().subtract(const Duration(minutes: 7)),
         isMine: false,
@@ -42,7 +44,8 @@ class ChatDemoService {
     _messages.add(
       ChatMessage(
         id: '${DateTime.now().microsecondsSinceEpoch}-reply',
-        text: 'Recebi sua mensagem. Posso te passar uma estimativa e combinar os detalhes por aqui.',
+        text:
+            'Recebi sua mensagem. Posso te passar uma estimativa e combinar os detalhes por aqui.',
         senderName: provider.name,
         sentAt: DateTime.now().add(const Duration(seconds: 1)),
         isMine: false,

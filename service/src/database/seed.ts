@@ -19,9 +19,12 @@ export const demoProviders = [
     neighborhood: "Vila Mariana",
     services: ["Faxineiro(a)", "Manutenção básica"],
     professionalDescription: "Atendimento residencial com foco em limpeza detalhada e organização de ambientes.",
+    experience: "Mais de 5 anos em limpeza residencial, organização e pequenos reparos.",
     availability: "Segunda a sexta",
     averagePrice: "A partir de R$ 120",
-    averageRating: 4.8
+    averageRating: 4.8,
+    baseAddress: "Vila Mariana, São Paulo",
+    serviceRadiusKm: 12
   },
   {
     userId: "22222222-2222-4222-8222-222222222222",
@@ -34,9 +37,12 @@ export const demoProviders = [
     neighborhood: "Tatuapé",
     services: ["Eletricista", "Manutenção básica"],
     professionalDescription: "Instalação, reparos elétricos simples e manutenção preventiva para residências.",
+    experience: "Técnico residencial com atendimento em instalações e manutenções de baixa tensão.",
     availability: "Noites e sábados",
     averagePrice: "A combinar",
-    averageRating: 4.6
+    averageRating: 4.6,
+    baseAddress: "Tatuapé, São Paulo",
+    serviceRadiusKm: 15
   },
   {
     userId: "33333333-3333-4333-8333-333333333333",
@@ -49,9 +55,12 @@ export const demoProviders = [
     neighborhood: "Centro",
     services: ["Encanador(a)", "Montador de móveis"],
     professionalDescription: "Pequenos reparos hidráulicos, montagem de móveis e ajustes gerais para o lar.",
+    experience: "Atua com reparos domésticos e montagem de móveis desde 2018.",
     availability: "Todos os dias",
     averagePrice: "R$ 80 por visita",
-    averageRating: 4.9
+    averageRating: 4.9,
+    baseAddress: "Centro, Guarulhos",
+    serviceRadiusKm: 20
   }
 ];
 

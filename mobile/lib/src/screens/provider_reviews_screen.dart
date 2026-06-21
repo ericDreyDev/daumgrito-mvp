@@ -37,7 +37,9 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
   }
 
   void _reload() {
-    setState(() => _futureReviews = _loadReviews());
+    setState(() {
+      _futureReviews = _loadReviews();
+    });
   }
 
   @override
@@ -50,7 +52,9 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
           children: [
             Row(
               children: [
-                Expanded(child: Text('Avaliações', style: Theme.of(context).textTheme.headlineSmall)),
+                Expanded(
+                    child: Text('Avaliações',
+                        style: Theme.of(context).textTheme.headlineSmall)),
                 IconButton.filledTonal(
                   onPressed: _reload,
                   icon: const Icon(Icons.refresh_rounded),
@@ -59,7 +63,9 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
               ],
             ),
             const SizedBox(height: 6),
-            Text('Veja comentários dos clientes e deixe uma resposta demonstrativa.', style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+                'Veja comentários dos clientes e deixe uma resposta demonstrativa.',
+                style: Theme.of(context).textTheme.bodyMedium),
             const SizedBox(height: 16),
             FutureBuilder<List<Review>>(
               future: _futureReviews,
@@ -85,7 +91,8 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
                   return _ReviewState(
                     icon: Icons.star_border_rounded,
                     title: 'Nenhuma avaliação ainda',
-                    message: 'Quando clientes avaliarem seus atendimentos, os comentários aparecerão aqui.',
+                    message:
+                        'Quando clientes avaliarem seus atendimentos, os comentários aparecerão aqui.',
                     onAction: _reload,
                   );
                 }
@@ -97,7 +104,8 @@ class _ProviderReviewsScreenState extends State<ProviderReviewsScreen> {
                       child: _ReviewCard(
                         review: review,
                         response: _responses[review.id],
-                        onRespond: (text) => setState(() => _responses[review.id] = text),
+                        onRespond: (text) =>
+                            setState(() => _responses[review.id] = text),
                       ),
                     );
                   }).toList(),
@@ -145,19 +153,24 @@ class _ReviewCardState extends State<_ReviewCard> {
           children: [
             Row(
               children: [
-                CircleAvatar(child: Text(widget.review.clientName.characters.first.toUpperCase())),
+                CircleAvatar(
+                    child: Text(widget.review.clientName.characters.first
+                        .toUpperCase())),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.review.clientName, style: Theme.of(context).textTheme.titleMedium),
+                      Text(widget.review.clientName,
+                          style: Theme.of(context).textTheme.titleMedium),
                       Row(
                         children: List.generate(5, (index) {
                           return Icon(
-                            index < widget.review.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                            index < widget.review.rating
+                                ? Icons.star_rounded
+                                : Icons.star_border_rounded,
                             size: 18,
-                            color: const Color(0xFFF59E0B),
+                            color: const Color(0xFFFF7A00),
                           );
                         }),
                       ),
@@ -167,7 +180,9 @@ class _ReviewCardState extends State<_ReviewCard> {
               ],
             ),
             const SizedBox(height: 12),
-            Text(widget.review.comment.isEmpty ? 'Sem comentário.' : widget.review.comment),
+            Text(widget.review.comment.isEmpty
+                ? 'Sem comentário.'
+                : widget.review.comment),
             if (widget.response != null) ...[
               const SizedBox(height: 12),
               Container(
@@ -183,7 +198,8 @@ class _ReviewCardState extends State<_ReviewCard> {
               const SizedBox(height: 12),
               TextField(
                 controller: _controller,
-                decoration: const InputDecoration(labelText: 'Responder avaliação'),
+                decoration:
+                    const InputDecoration(labelText: 'Responder avaliação'),
                 minLines: 2,
                 maxLines: 4,
               ),
@@ -196,7 +212,8 @@ class _ReviewCardState extends State<_ReviewCard> {
                     if (text.isEmpty) return;
                     widget.onRespond(text);
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Resposta demonstrativa registrada.')),
+                      const SnackBar(
+                          content: Text('Resposta demonstrativa registrada.')),
                     );
                   },
                   child: const Text('Responder'),
@@ -232,7 +249,9 @@ class _ReviewState extends StatelessWidget {
           children: [
             Icon(icon, size: 44, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
-            Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.titleMedium),
+            Text(title,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 8),
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 18),

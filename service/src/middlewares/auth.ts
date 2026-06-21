@@ -22,9 +22,18 @@ export async function requireAuth(req: Request, _res: Response, next: NextFuncti
     const payload = verifyToken(token);
     const user = await findUserById(payload.sub);
     if (!user) throw new AppError(401, "Usuário não encontrado.");
+    if (!user.isActive || user.isBlocked) throw new AppError(403, "Usuario inativo ou bloqueado.");
     req.user = user;
     next();
   } catch (error) {
     next(error instanceof AppError ? error : new AppError(401, "Token inválido ou expirado."));
   }
+}
+
+export function requireAdmin(req: Request, _res: Response, next: NextFunction) {
+  if (req.user?.userType !== "admin") {
+    return next(new AppError(403, "Acesso permitido apenas para administradores."));
+  }
+
+  next();
 }

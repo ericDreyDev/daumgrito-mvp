@@ -34,7 +34,8 @@ class ProviderDetailScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => ChatScreen(provider: provider)),
+                      MaterialPageRoute(
+                          builder: (_) => ChatScreen(provider: provider)),
                     );
                   },
                   icon: const Icon(Icons.chat_bubble_outline_rounded),
@@ -44,7 +45,7 @@ class ProviderDetailScreen extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: provider.validationStatus == 'Aprovado' && provider.isOnline
+                  onPressed: provider.canReceiveRequests
                       ? () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
@@ -58,7 +59,9 @@ class ProviderDetailScreen extends StatelessWidget {
                         }
                       : null,
                   icon: const Icon(Icons.assignment_turned_in_rounded),
-                  label: const Text('Solicitar'),
+                  label: Text(provider.canReceiveRequests
+                      ? 'Solicitar'
+                      : 'Indisponível'),
                 ),
               ),
             ],
@@ -80,19 +83,29 @@ class ProviderDetailScreen extends StatelessWidget {
                         radius: 38,
                         backgroundColor: colors.primaryContainer,
                         foregroundColor: colors.onPrimaryContainer,
-                        child: Text(
-                          provider.name.substring(0, 1).toUpperCase(),
-                          style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w900),
-                        ),
+                        foregroundImage: provider.photoUrl == null ||
+                                provider.photoUrl!.isEmpty
+                            ? null
+                            : NetworkImage(provider.photoUrl!),
+                        child: provider.photoUrl == null ||
+                                provider.photoUrl!.isEmpty
+                            ? Text(
+                                provider.name.substring(0, 1).toUpperCase(),
+                                style: const TextStyle(
+                                    fontSize: 28, fontWeight: FontWeight.w900),
+                              )
+                            : null,
                       ),
                       const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(provider.name, style: Theme.of(context).textTheme.headlineSmall),
+                            Text(provider.name,
+                                style:
+                                    Theme.of(context).textTheme.headlineSmall),
                             const SizedBox(height: 4),
-                            Text('${provider.city}, ${provider.neighborhood}'),
+                            Text(provider.serviceRegion),
                           ],
                         ),
                       ),
@@ -101,11 +114,19 @@ class ProviderDetailScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   Row(
                     children: [
-                      _Metric(label: 'Avaliacao', value: provider.averageRating == 0 ? 'Novo' : provider.averageRating.toStringAsFixed(1)),
+                      _Metric(
+                          label: 'Avaliação',
+                          value: provider.averageRating == 0
+                              ? 'Novo'
+                              : provider.averageRating.toStringAsFixed(1)),
                       const SizedBox(width: 10),
-                      _Metric(label: 'Servicos', value: provider.completedServicesCount.toString()),
+                      _Metric(
+                          label: 'Serviços',
+                          value: provider.completedServicesCount.toString()),
                       const SizedBox(width: 10),
-                      _Metric(label: 'Valor', value: provider.averagePrice ?? 'A combinar'),
+                      _Metric(
+                          label: 'Valor',
+                          value: provider.averagePrice ?? 'A combinar'),
                     ],
                   ),
                 ],
@@ -114,11 +135,13 @@ class ProviderDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Servicos oferecidos',
+            title: 'Categorias atendidas',
             child: Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: provider.services.map((service) => Chip(label: Text(service))).toList(),
+              children: provider.services
+                  .map((service) => Chip(label: Text(service)))
+                  .toList(),
             ),
           ),
           const SizedBox(height: 14),
@@ -127,57 +150,49 @@ class ProviderDetailScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(provider.professionalDescription ?? 'Perfil profissional em preenchimento.'),
-                if ((provider.experience ?? '').isNotEmpty) ...[
+                Text(provider.professionalDescription ??
+                    'Perfil profissional em preenchimento.'),
+                if (provider.experience?.isNotEmpty == true) ...[
                   const SizedBox(height: 10),
-                  _InfoLine(icon: Icons.workspace_premium_rounded, text: provider.experience!),
+                  Text('Experiência',
+                      style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 6),
+                  Text(provider.experience!),
                 ],
               ],
             ),
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Disponibilidade e regiao',
+            title: 'Disponibilidade e região',
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _InfoLine(icon: Icons.schedule_rounded, text: provider.availability ?? 'Disponibilidade a combinar'),
+                _InfoLine(
+                    icon: Icons.schedule_rounded,
+                    text:
+                        provider.availability ?? 'Disponibilidade a combinar'),
                 const SizedBox(height: 8),
-                _InfoLine(icon: Icons.map_rounded, text: 'Atende ${provider.city}, ${provider.neighborhood} e raio de ${provider.serviceRadiusKm} km'),
+                _InfoLine(
+                    icon: Icons.map_rounded, text: provider.serviceRegion),
+                const SizedBox(height: 8),
+                _InfoLine(
+                  icon: provider.canReceiveRequests
+                      ? Icons.verified_rounded
+                      : Icons.pending_actions_rounded,
+                  text: provider.canReceiveRequests
+                      ? 'Cadastro aprovado e online'
+                      : 'Prestador indisponível para novas solicitações',
+                ),
               ],
             ),
           ),
           const SizedBox(height: 14),
           _SectionCard(
-            title: 'Comentarios de clientes',
-            child: FutureBuilder<List<Review>>(
-              future: ReviewService(apiClient).listProviderReviews(provider.id),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.all(12),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final reviews = snapshot.data ?? [];
-                if (reviews.isEmpty) {
-                  return const Text('Este profissional ainda nao recebeu comentarios.');
-                }
-
-                return Column(
-                  children: reviews.take(5).map((review) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
-                      child: _ReviewPreview(
-                        name: review.clientName,
-                        text: review.comment.isEmpty ? 'Sem comentario.' : review.comment,
-                        rating: review.rating.toString(),
-                      ),
-                    );
-                  }).toList(),
-                );
-              },
+            title: 'Comentários de clientes',
+            child: _ProviderReviewsPreview(
+              service: ReviewService(apiClient),
+              providerId: provider.id,
             ),
           ),
         ],
@@ -198,13 +213,14 @@ class _Metric extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceVariant,
+          color: const Color(0xFFE5F1FF),
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: const TextStyle(color: Color(0xFF667085), fontSize: 12)),
+            Text(label,
+                style: const TextStyle(color: Color(0xFF516070), fontSize: 12)),
             const SizedBox(height: 4),
             Text(value, style: const TextStyle(fontWeight: FontWeight.w900)),
           ],
@@ -256,12 +272,46 @@ class _InfoLine extends StatelessWidget {
   }
 }
 
-class _ReviewPreview extends StatelessWidget {
-  const _ReviewPreview({required this.name, required this.text, required this.rating});
+class _ProviderReviewsPreview extends StatelessWidget {
+  const _ProviderReviewsPreview({
+    required this.service,
+    required this.providerId,
+  });
 
-  final String name;
-  final String text;
-  final String rating;
+  final ReviewService service;
+  final String providerId;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<Review>>(
+      future: service.listProviderReviews(providerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final reviews = snapshot.data ?? [];
+        if (reviews.isEmpty) {
+          return const Text('Este profissional ainda não recebeu comentários.');
+        }
+
+        return Column(
+          children: reviews.take(3).map((review) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _ReviewPreview(review: review),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _ReviewPreview extends StatelessWidget {
+  const _ReviewPreview({required this.review});
+
+  final Review review;
 
   @override
   Widget build(BuildContext context) {
@@ -269,7 +319,7 @@ class _ReviewPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant,
+        color: const Color(0xFFF8FAFC),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
@@ -277,13 +327,19 @@ class _ReviewPreview extends StatelessWidget {
         children: [
           Row(
             children: [
-              Expanded(child: Text(name, style: const TextStyle(fontWeight: FontWeight.w800))),
-              const Icon(Icons.star_rounded, size: 16, color: Color(0xFFF59E0B)),
-              Text(rating),
+              Expanded(
+                child: Text(review.clientName,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              const Icon(Icons.star_rounded,
+                  size: 16, color: Color(0xFFFF7A00)),
+              Text(review.rating.toString()),
             ],
           ),
           const SizedBox(height: 5),
-          Text(text),
+          Text(review.comment.isEmpty
+              ? 'Cliente não deixou comentário.'
+              : review.comment),
         ],
       ),
     );

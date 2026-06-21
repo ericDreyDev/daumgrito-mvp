@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import bcrypt from "bcryptjs";
 import { db } from "../database/connection.js";
 import type { AuthUser, UserType } from "../models/types.js";
 import { AppError } from "../utils/errors.js";
@@ -13,6 +14,9 @@ export interface UserRow {
   city: string;
   neighborhood: string;
   user_type: UserType;
+  is_active: boolean;
+  is_blocked: boolean;
+  created_at?: Date;
 }
 
 function toAuthUser(row: UserRow): AuthUser {
@@ -24,11 +28,13 @@ function toAuthUser(row: UserRow): AuthUser {
     document: row.document,
     city: row.city,
     neighborhood: row.neighborhood,
-    userType: row.user_type
+    userType: row.user_type,
+    isActive: row.is_active,
+    isBlocked: row.is_blocked
   };
 }
 
-export async function createUser(input: Omit<AuthUser, "id"> & { passwordHash: string }) {
+export async function createUser(input: Omit<AuthUser, "id" | "isActive" | "isBlocked"> & { passwordHash: string }) {
   const id = randomUUID();
   await db.query(
     `INSERT INTO users (id, name, email, phone, document, password_hash, city, neighborhood, user_type)
@@ -80,4 +86,37 @@ export async function updateUser(id: string, input: Partial<Omit<AuthUser, "id" 
 
 export function publicUserFromRow(row: UserRow) {
   return toAuthUser(row);
+}
+
+export async function listUsers() {
+  const result = await db.query<UserRow>("SELECT * FROM users ORDER BY created_at DESC");
+  return result.rows.map(toAuthUser);
+}
+
+export async function setUserAccess(
+  id: string,
+  input: { isActive?: boolean; isBlocked?: boolean }
+) {
+  const current = await findUserById(id);
+  if (!current) return undefined;
+
+  await db.query(
+    `UPDATE users
+     SET is_active = $1,
+         is_blocked = $2
+     WHERE id = $3`,
+    [
+      input.isActive ?? current.isActive,
+      input.isBlocked ?? current.isBlocked,
+      id
+    ]
+  );
+
+  return findUserById(id);
+}
+
+export async function resetUserPassword(id: string, password: string) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  await db.query("UPDATE users SET password_hash = $1 WHERE id = $2", [passwordHash, id]);
+  return findUserById(id);
 }

@@ -43,6 +43,9 @@ class ServiceRequest {
     required this.clientCity,
     required this.clientNeighborhood,
     required this.reviewed,
+    this.reviewRating,
+    this.reviewComment,
+    this.paymentAmount,
   });
 
   final String id;
@@ -60,7 +63,22 @@ class ServiceRequest {
   final String clientCity;
   final String clientNeighborhood;
   final bool reviewed;
+  final int? reviewRating;
+  final String? reviewComment;
+  final double? paymentAmount;
 
+  bool get isCompleted {
+    final normalized = _normalizeStatus(status);
+    return normalized == 'concluido' || normalized == 'finalizado';
+  }
+
+  bool get isFinalStatus {
+    final normalized = _normalizeStatus(status);
+    return isCompleted || normalized == 'cancelado' || normalized == 'recusado';
+  }
+
+<<<<<<< HEAD
+=======
   bool get isWaiting =>
       _normalizeStatus(status) == 'aguardando aceite' ||
       _normalizeStatus(status) == 'solicitado';
@@ -73,6 +91,7 @@ class ServiceRequest {
   bool get isCanceled =>
       _normalizeStatus(status) == 'cancelado' ||
       _normalizeStatus(status) == 'recusado';
+>>>>>>> Feature_QA
   bool get canBeReviewed => isCompleted && !reviewed;
 
   factory ServiceRequest.fromJson(Map<String, dynamic> json) {
@@ -87,6 +106,9 @@ class ServiceRequest {
       status: json['status'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       reviewed: json['reviewed'] as bool? ?? false,
+      reviewRating: int.tryParse(json['review_rating'].toString()),
+      reviewComment: json['review_comment'] as String?,
+      paymentAmount: double.tryParse(json['payment_amount'].toString()),
       clientName: json['client_name'] as String? ?? 'Cliente',
       clientPhone: json['client_phone'] as String? ?? '',
       clientCity: json['client_city'] as String? ?? '',
@@ -96,6 +118,18 @@ class ServiceRequest {
         name: json['provider_name'] as String? ?? 'Profissional',
         email: json['provider_email'] as String? ?? '',
         phone: json['provider_phone'] as String? ?? '',
+<<<<<<< HEAD
+        email: '',
+        document: '',
+        city: json['provider_city'] as String? ?? '',
+        neighborhood: json['provider_neighborhood'] as String? ?? '',
+        services: List<String>.from(json['provider_services'] as List<dynamic>? ?? const []),
+        averageRating: double.tryParse(json['provider_average_rating'].toString()) ?? 0,
+        documentUrls: const [],
+        validationStatus: json['provider_validation_status'] as String? ?? 'Pendente',
+        serviceRadiusKm: 5,
+        useCurrentLocation: false,
+=======
         document: json['provider_document'] as String? ?? '',
         city: json['provider_city'] as String? ?? '',
         neighborhood: json['provider_neighborhood'] as String? ?? '',
@@ -110,6 +144,7 @@ class ServiceRequest {
             (json['provider_service_radius_km'] as num?)?.toInt() ?? 10,
         useCurrentLocation:
             json['provider_use_current_location'] as bool? ?? false,
+>>>>>>> Feature_QA
         isOnline: json['provider_is_online'] as bool? ?? false,
         completedServicesCount: 0,
         photoUrl: json['provider_photo_url'] as String?,
@@ -132,7 +167,21 @@ class ServiceRequest {
         .replaceAll('ã', 'a')
         .replaceAll('ç', 'c')
         .replaceAll('í', 'i')
+<<<<<<< HEAD
+        .replaceAll('ú', 'u')
+        .replaceAll('ç', 'c')
+        .replaceAll('ã', 'a')
+        .replaceAll('õ', 'o')
+        .replaceAll('Ã­', 'i')
+        .replaceAll('Ãº', 'u')
+        .replaceAll('Ã§', 'c')
+        .replaceAll('Ã£', 'a')
+        .replaceAll('Ãµ', 'o')
+        .replaceAll('ÃƒÂ­', 'i')
+        .replaceAll('ÃƒÂº', 'u');
+=======
         .replaceAll('ó', 'o')
         .replaceAll('ú', 'u');
+>>>>>>> Feature_QA
   }
 }

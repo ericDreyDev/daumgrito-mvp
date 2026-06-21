@@ -32,7 +32,8 @@ class AuthService {
   }
 
   Future<AuthResult> register(Map<String, dynamic> payload) async {
-    final data = await _apiClient.post('/auth/register', payload) as Map<String, dynamic>;
+    final data = await _apiClient.post('/auth/register', payload)
+        as Map<String, dynamic>;
     final token = data['token'] as String;
     _apiClient.setToken(token);
 
@@ -40,5 +41,10 @@ class AuthService {
       user: User.fromJson(data['user'] as Map<String, dynamic>),
       token: token,
     );
+  }
+
+  Future<User> currentUser() async {
+    final data = await _apiClient.get('/users/me') as Map<String, dynamic>;
+    return User.fromJson(data);
   }
 }

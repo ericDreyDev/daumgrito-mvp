@@ -4,6 +4,7 @@ import {
   findProviderById,
   findProviderByUserId,
   listProviders,
+  setProviderAvailability,
   upsertProviderProfile
 } from "../repositories/providersRepository.js";
 import { listProviderReviews } from "../repositories/reviewsRepository.js";
@@ -11,18 +12,29 @@ import { AppError } from "../utils/errors.js";
 import { routeParam } from "../utils/http.js";
 
 const profileSchema = z.object({
+  name: z.string().min(2),
+  phone: z.string().min(8),
+  document: z.string().min(6),
+  city: z.string().min(2),
+  neighborhood: z.string().min(2),
   photoUrl: z.string().url().optional().or(z.literal("")),
   services: z.array(z.string().min(2)).min(1),
   professionalDescription: z.string().min(10),
-  experience: z.string().optional().default(""),
+  experience: z.string().optional(),
+  documents: z.array(z.string().min(2)).default([]),
+  selfieUrl: z.string().url().optional().or(z.literal("")),
+  baseAddress: z.string().optional(),
+  serviceCity: z.string().min(2),
+  serviceNeighborhood: z.string().min(2),
+  serviceRadiusKm: z.number().int().min(1).max(100),
+  useCurrentLocation: z.boolean().default(false),
+  isOnline: z.boolean().default(false),
   availability: z.string().min(2),
-  averagePrice: z.string().min(1),
-  documentUrls: z.array(z.string().min(2)).optional().default([]),
-  verificationSelfieUrl: z.string().url().optional().or(z.literal("")).default(""),
-  baseAddress: z.string().min(2),
-  serviceRadiusKm: z.coerce.number().int().min(1).max(100),
-  useCurrentLocation: z.boolean().optional().default(false),
-  isOnline: z.boolean().optional().default(false)
+  averagePrice: z.string().min(1)
+});
+
+const availabilitySchema = z.object({
+  isOnline: z.boolean()
 });
 
 export async function getProviders(req: Request, res: Response) {
@@ -50,15 +62,24 @@ export async function putProviderProfile(req: Request, res: Response) {
   }
 
   const input = profileSchema.parse(req.body);
-  const provider = await upsertProviderProfile(req.user!.id, {
-    ...input,
-    photoUrl: input.photoUrl || null,
-    verificationSelfieUrl: input.verificationSelfieUrl || null
-  });
+  const provider = await upsertProviderProfile(req.user!.id, input);
   return res.json(provider);
 }
 
+export async function patchProviderAvailability(req: Request, res: Response) {
+  if (req.user!.userType !== "provider") {
+    throw new AppError(403, "Apenas prestadores podem alterar disponibilidade.");
+  }
+
+  const { isOnline } = availabilitySchema.parse(req.body);
+  return res.json(await setProviderAvailability(req.user!.id, isOnline));
+}
+
 export async function getMyProviderProfile(req: Request, res: Response) {
+  if (req.user!.userType !== "provider") {
+    throw new AppError(403, "Apenas prestadores acessam este perfil.");
+  }
+
   const provider = await findProviderByUserId(req.user!.id);
   if (!provider) throw new AppError(404, "Perfil de prestador não encontrado.");
   return res.json(provider);

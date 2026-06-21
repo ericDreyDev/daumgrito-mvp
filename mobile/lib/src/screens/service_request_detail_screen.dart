@@ -18,13 +18,14 @@ class ServiceRequestDetailScreen extends StatefulWidget {
   final ServiceRequest initialRequest;
 
   @override
-  State<ServiceRequestDetailScreen> createState() => _ServiceRequestDetailScreenState();
+  State<ServiceRequestDetailScreen> createState() =>
+      _ServiceRequestDetailScreenState();
 }
 
-class _ServiceRequestDetailScreenState extends State<ServiceRequestDetailScreen> {
+class _ServiceRequestDetailScreenState
+    extends State<ServiceRequestDetailScreen> {
   late final ServiceRequestService _service;
   late ServiceRequest _request;
-  bool _isUpdating = false;
 
   @override
   void initState() {
@@ -37,17 +38,6 @@ class _ServiceRequestDetailScreenState extends State<ServiceRequestDetailScreen>
     final request = await _service.getById(_request.id);
     if (!mounted) return;
     setState(() => _request = request);
-  }
-
-  Future<void> _updateStatus(String status) async {
-    setState(() => _isUpdating = true);
-    try {
-      final request = await _service.updateStatus(_request.id, status);
-      if (!mounted) return;
-      setState(() => _request = request);
-    } finally {
-      if (mounted) setState(() => _isUpdating = false);
-    }
   }
 
   Future<void> _openReview() async {
@@ -81,14 +71,17 @@ class _ServiceRequestDetailScreenState extends State<ServiceRequestDetailScreen>
                       children: [
                         CircleAvatar(
                           radius: 28,
-                          child: Text(_request.provider.name.characters.first.toUpperCase()),
+                          child: Text(_request.provider.name.characters.first
+                              .toUpperCase()),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(_request.service, style: Theme.of(context).textTheme.titleLarge),
+                              Text(_request.service,
+                                  style:
+                                      Theme.of(context).textTheme.titleLarge),
                               Text(_request.provider.name),
                             ],
                           ),
@@ -106,37 +99,59 @@ class _ServiceRequestDetailScreenState extends State<ServiceRequestDetailScreen>
             _SectionCard(
               title: 'Resumo do pedido',
               children: [
-                _InfoLine(icon: Icons.notes_rounded, label: 'Descrição', value: _request.description),
-                _InfoLine(icon: Icons.event_rounded, label: 'Data desejada', value: _formatDate(_request.desiredDate)),
-                _InfoLine(icon: Icons.place_rounded, label: 'Local', value: _request.locationNeighborhood),
-                _InfoLine(icon: Icons.schedule_rounded, label: 'Criado em', value: _formatDate(_request.createdAt)),
+                _InfoLine(
+                    icon: Icons.notes_rounded,
+                    label: 'Descrição',
+                    value: _request.description),
+                _InfoLine(
+                    icon: Icons.event_rounded,
+                    label: 'Data desejada',
+                    value: _formatDate(_request.desiredDate)),
+                _InfoLine(
+                    icon: Icons.place_rounded,
+                    label: 'Local',
+                    value: _request.locationNeighborhood),
+                _InfoLine(
+                    icon: Icons.schedule_rounded,
+                    label: 'Criado em',
+                    value: _formatDate(_request.createdAt)),
               ],
             ),
             const SizedBox(height: 14),
             _SectionCard(
               title: 'Profissional',
               children: [
-                _InfoLine(icon: Icons.person_rounded, label: 'Nome', value: _request.provider.name),
-                _InfoLine(icon: Icons.phone_rounded, label: 'Telefone', value: _request.provider.phone.isEmpty ? 'Não informado' : _request.provider.phone),
-                _InfoLine(icon: Icons.payments_rounded, label: 'Valor médio', value: _request.provider.averagePrice ?? 'A combinar'),
+                _InfoLine(
+                    icon: Icons.person_rounded,
+                    label: 'Nome',
+                    value: _request.provider.name),
+                _InfoLine(
+                    icon: Icons.phone_rounded,
+                    label: 'Telefone',
+                    value: _request.provider.phone.isEmpty
+                        ? 'Não informado'
+                        : _request.provider.phone),
+                _InfoLine(
+                    icon: Icons.payments_rounded,
+                    label: 'Valor médio',
+                    value: _request.provider.averagePrice ?? 'A combinar'),
               ],
             ),
             const SizedBox(height: 16),
             OutlinedButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => ChatScreen(provider: _request.provider)),
+                  MaterialPageRoute(
+                      builder: (_) => ChatScreen(provider: _request.provider)),
                 );
               },
               icon: const Icon(Icons.chat_bubble_outline_rounded),
               label: const Text('Abrir chat demonstrativo'),
             ),
             const SizedBox(height: 10),
-            if (!_request.isCompleted && _request.status != 'Cancelado')
-              FilledButton.icon(
-                onPressed: _isUpdating ? null : () => _updateStatus('Concluído'),
-                icon: const Icon(Icons.check_circle_rounded),
-                label: Text(_isUpdating ? 'Atualizando...' : 'Marcar como concluído'),
+            if (!_request.isCompleted && !_request.isCanceled)
+              const Text(
+                'O prestador atualiza o andamento do atendimento. Quando ele finalizar, a avaliação será liberada.',
               ),
             if (_request.canBeReviewed) ...[
               const SizedBox(height: 10),
@@ -153,9 +168,12 @@ class _ServiceRequestDetailScreenState extends State<ServiceRequestDetailScreen>
                   padding: const EdgeInsets.all(16),
                   child: Row(
                     children: [
-                      Icon(Icons.verified_rounded, color: Theme.of(context).colorScheme.primary),
+                      Icon(Icons.verified_rounded,
+                          color: Theme.of(context).colorScheme.primary),
                       const SizedBox(width: 10),
-                      const Expanded(child: Text('Avaliação enviada. Obrigado por ajudar outros clientes.')),
+                      const Expanded(
+                          child: Text(
+                              'Avaliação enviada. Obrigado por ajudar outros clientes.')),
                     ],
                   ),
                 ),
@@ -224,7 +242,8 @@ class _InfoLine extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(label, style: Theme.of(context).textTheme.bodySmall),
-                Text(value, style: const TextStyle(fontWeight: FontWeight.w800)),
+                Text(value,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
               ],
             ),
           ),
@@ -247,7 +266,8 @@ class _StatusPill extends StatelessWidget {
         color: Theme.of(context).colorScheme.primaryContainer,
         borderRadius: BorderRadius.circular(999),
       ),
-      child: Text(status, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
+      child: Text(status,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900)),
     );
   }
 }
