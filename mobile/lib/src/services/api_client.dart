@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 class ApiClient {
   ApiClient({
     http.Client? httpClient,
-    this.baseUrl = 'http://localhost:3333',
+    this.baseUrl = 'https://daumgrito-mvp.onrender.com',
   }) : _httpClient = httpClient ?? http.Client();
 
   final http.Client _httpClient;
